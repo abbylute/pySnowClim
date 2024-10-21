@@ -2,7 +2,9 @@
 Calculates specific humidity given the dewpoint temperature and surface pressure,
 using the equation cited from Bolton (1980).
 """
-def calc_specific_humidity(Td, P):
+import numpy as np
+
+def calculate_specific_humidity(Td, P):
     """
     Calculate specific humidity.
 

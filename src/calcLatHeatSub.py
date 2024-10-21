@@ -4,7 +4,7 @@ Calculates the latent heat of sublimation as a function of snow temperature.
 
 import numpy as np
 
-def calc_lat_heat_sub(lastsnowtemp):
+def calculate_lat_heat_sub(lastsnowtemp):
     """
     Calculate the latent heat of sublimation (in kJ/kg) based on snow temperature.
     

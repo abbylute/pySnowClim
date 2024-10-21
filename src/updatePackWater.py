@@ -35,17 +35,19 @@ def update_pack_water(a, lastpackwater, lastsnowdepth, lw_max, runoff, sec_in_ts
 
     # Gravity drainage if water content is between min and max water
     b = np.logical_and(a, np.logical_and(lastpackwater > min_water, lastpackwater <= max_water))
-    waterrate = np.full_like(lastpackwater[b], 2.7778e-05)  # Drainage rate (10 cm/hr converted to m/s)
-    waterdrainage = waterrate * (sec_in_ts / 2)  # Volume of water drained during the timestep
-
-    # Don't let drainage drop packwater below the minimum threshold
-    waterdrainage = np.minimum(waterdrainage, lastpackwater[b] - min_water[b])
-    runoff[:, b] += waterdrainage
-    lastpackwater[b] -= waterdrainage
-
-    # Drain all excess water if packwater exceeds max_water
-    b = np.logical_and(a, lastpackwater > max_water)
-    runoff[:, b] += (lastpackwater[b] - max_water[b])
-    lastpackwater[b] = max_water[b]
+    
+    if np.any(b):
+        waterrate = np.full_like(lastpackwater[b], 2.7778e-05)  # Drainage rate (10 cm/hr converted to m/s)
+        waterdrainage = waterrate * (sec_in_ts / 2)  # Volume of water drained during the timestep
+    
+        # Don't let drainage drop packwater below the minimum threshold
+        waterdrainage = np.minimum(waterdrainage, lastpackwater[b] - min_water[b])
+        runoff[b] += waterdrainage
+        lastpackwater[b] -= waterdrainage
+    
+        # Drain all excess water if packwater exceeds max_water
+        b = np.logical_and(a, lastpackwater > max_water)
+        runoff[b] += (lastpackwater[b] - max_water[b])
+        lastpackwater[b] = max_water[b]
 
     return runoff, lastpackwater

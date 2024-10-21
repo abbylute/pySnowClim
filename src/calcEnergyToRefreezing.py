@@ -3,9 +3,10 @@ This script distributes excess energy in the snowpack to allow refreezing of rai
 """
 
 import numpy as np
+import constants as const
 
 def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth, 
-                              WaterDens, LatHeatFreez, RefrozenWater, packsnowdensity):
+                              RefrozenWater, packsnowdensity):
     """
     Distributes excess energy to refreeze rain and meltwater in the snowpack, updates SWE, cold content, and snow density.
 
@@ -15,8 +16,6 @@ def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth,
     - lastswe: Snow water equivalent (array).
     - lastpackcc: Snowpack cold content (array).
     - lastsnowdepth: Current snow depth (array).
-    - WaterDens: Density of water (constant).
-    - LatHeatFreez: Latent heat of fusion (constant).
     - RefrozenWater: Amount of refrozen water (array).
     - packsnowdensity: Snowpack density (array).
 
@@ -34,24 +33,27 @@ def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth,
     
     # Potential energy from refreezing
     Prf = np.zeros_like(lastpackwater)
-    Prf[b] = WaterDens * LatHeatFreez * lastpackwater[b]
+    if np.any(b):
+        Prf[b] = const.WATERDENS * const.LATHEATFREEZ * lastpackwater[b]
 
     # 1. If cold content exceeds refreezing potential energy, freeze all water and update cold content
     bb = b & (-lastpackcc >= Prf)
-    lastswe[bb] += lastpackwater[bb]
-    RefrozenWater[:, bb] = lastpackwater[bb]
-    lastpackwater[bb] = 0
-    lastpackcc[bb] += Prf[bb]
-    Prf[bb] = 0
+    if np.any(bb):
+        lastswe[bb] += lastpackwater[bb]
+        RefrozenWater[bb] = lastpackwater[bb]
+        lastpackwater[bb] = 0
+        lastpackcc[bb] += Prf[bb]
+        Prf[bb] = 0
 
     # 2. If cold content is insufficient for full refreezing, freeze what is possible
     bb = (lastpackwater > 0) & (lastswe > 0) & (lastpackcc < 0) & (-lastpackcc < Prf) & (packsnowdensity < 550)
-    RefrozenWater[:, bb] = -lastpackcc[bb] / (WaterDens * LatHeatFreez)
-    lastswe[bb] += RefrozenWater[:, bb]
-    lastpackwater[bb] -= RefrozenWater[:, bb]
-    lastpackcc[bb] = 0
+    if np.any(bb):
+        RefrozenWater[bb] = -lastpackcc[bb] / (const.WATERDENS * const.LATHEATFREEZ)
+        lastswe[bb] += RefrozenWater[bb]
+        lastpackwater[bb] -= RefrozenWater[bb]
+        lastpackcc[bb] = 0
 
     # Update snow density, assuming snow depth remains unchanged
-    packsnowdensity = lastswe * WaterDens / lastsnowdepth
+    packsnowdensity = lastswe * const.WATERDENS / lastsnowdepth
 
     return lastpackwater, lastswe, lastpackcc, packsnowdensity, RefrozenWater

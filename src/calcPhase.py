@@ -3,8 +3,9 @@ Estimates precipitation phase (rain or snow) based on temperature and relative h
 """
 
 import numpy as np
+import constants as const
 
-def calc_phase(temp, precip, rh, binary):
+def calculate_phase(temp, precip, rh, binary):
     """
     Calculate the precipitation phase (rain or snow) based on temperature, relative humidity, and precipitation data.
     
@@ -19,14 +20,16 @@ def calc_phase(temp, precip, rh, binary):
     --------
     - snow: Precipitation classified as snow (in precipitation units). If `binary` is True, returns 1 for snow and 0 for rain.
     """
+    # TODO break this function to remove the binary variable
     
+    # TODO add the below coefficients to the constant file
     # Coefficients from Jennings et al., 2018 (Table 2)
     a = -10.04
     b = 1.41
     g = 0.09
 
     # Convert temperature from Kelvin to Celsius
-    temp_celsius = temp - 273.15
+    temp_celsius = temp - const.K_2_C
 
     # Calculate probability of snow
     psnow = 1.0 / (1.0 + np.exp(a + b * temp_celsius + g * rh))
