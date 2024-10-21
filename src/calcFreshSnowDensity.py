@@ -16,7 +16,7 @@ def calc_fresh_snow_density(airtemp):
     --------
     - newsnowdensity: Density of fresh snow (array or scalar).
     """
-    
+    # TODO move these constants to the constant file.
     # Define constants
     df = 1.7     # 1/K
     ef = 15      # K

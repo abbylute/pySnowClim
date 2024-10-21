@@ -27,8 +27,11 @@ Albedo Calculation Models:
 """
 
 import numpy as np
+import constants as const
 
-def calc_albedo(albedo_option, ground_albedo, max_albedo, last_albedo, new_snow_depth, last_snow_depth, new_swe, last_swe, last_snow_temp, water_dens, lat, month, day, snow_age, last_pack_cc, sec_in_ts):
+def calc_albedo(albedo_option, ground_albedo, max_albedo, last_albedo, new_snow_depth, 
+                     last_snow_depth, new_swe, last_swe, last_snow_temp, lat, 
+                     month, day, snow_age, last_pack_cc, sec_in_ts):
     """
     Calculate the snow albedo based on the selected model option and various snow and environmental parameters.
 
@@ -55,8 +58,6 @@ def calc_albedo(albedo_option, ground_albedo, max_albedo, last_albedo, new_snow_
         SWE from the previous timestep.
     last_snow_temp : ndarray
         Snow temperature from the previous timestep.
-    water_dens : float
-        Density of water (kg/m^3).
     lat : ndarray
         Latitude of the snow surface points.
     month : int
@@ -79,13 +80,13 @@ def calc_albedo(albedo_option, ground_albedo, max_albedo, last_albedo, new_snow_
     """
     
     if albedo_option == 1:  # Essery et al. (2013) option 1
-        albedo = calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, max_albedo, ground_albedo, water_dens, sec_in_ts)
+        albedo = _calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, max_albedo, ground_albedo, sec_in_ts)
         
     elif albedo_option == 2:  # Utah Snow Model (Tarboton)
-        albedo, snow_age = calc_albedo_tarboton(last_snow_temp + 273.15, snow_age, new_snow_depth, lat, month, day, last_swe, ground_albedo, max_albedo, sec_in_ts)
+        albedo, snow_age = _calc_albedo_tarboton(last_snow_temp + 273.15, snow_age, new_snow_depth, lat, month, day, last_swe, ground_albedo, max_albedo, sec_in_ts)
         
     elif albedo_option == 3:  # VIC model
-        albedo, snow_age = calc_albedo_vic(new_snow_depth, snow_age, ground_albedo, last_snow_depth, last_albedo, max_albedo, sec_in_ts, last_pack_cc)
+        albedo, snow_age = _calc_albedo_vic(new_snow_depth, snow_age, ground_albedo, last_snow_depth, last_albedo, max_albedo, sec_in_ts, last_pack_cc)
 
     # Adjust albedo if total snow depth is low (< 0.1 m)
     z = last_snow_depth
@@ -101,7 +102,8 @@ def calc_albedo(albedo_option, ground_albedo, max_albedo, last_albedo, new_snow_
     return albedo, snow_age
 
 
-def calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, max_albedo, ground_albedo, water_dens, sec_in_ts):
+def _calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, max_albedo, 
+                             ground_albedo, sec_in_ts):
     """
     Calculate snow albedo based on Essery et al. (2013) option 1.
 
@@ -118,7 +120,7 @@ def calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, max_
     Tm = 3.6e5  # s
 
     dt = sec_in_ts
-    Sf = new_swe * water_dens / dt  # snow fall rate (kg m-2 s-1)
+    Sf = new_swe * const.WATERDENS / dt  # snow fall rate (kg m-2 s-1)
 
     albedo = np.zeros_like(last_albedo)
 
@@ -143,7 +145,8 @@ def calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, max_
     return albedo
 
 
-def calc_albedo_vic(new_snow_depth, snow_age, ground_albedo, last_snow_depth, last_albedo, max_albedo, sec_in_ts, last_pack_cc):
+def _calc_albedo_vic(new_snow_depth, snow_age, ground_albedo, last_snow_depth, 
+                     last_albedo, max_albedo, sec_in_ts, last_pack_cc):
     """
     Calculate snow albedo based on the VIC model.
 
@@ -190,7 +193,8 @@ def calc_albedo_vic(new_snow_depth, snow_age, ground_albedo, last_snow_depth, la
     return albedo, snow_age
 
 
-def calc_albedo_tarboton(last_snow_temp, snow_age, new_snow_depth, lat, month, day, last_swe, ground_albedo, max_albedo, sec_in_ts):
+def _calc_albedo_tarboton(last_snow_temp, snow_age, new_snow_depth, lat, month, day, 
+                          last_swe, ground_albedo, max_albedo, sec_in_ts):
     """
     Calculate snow albedo based on the Utah Snow Model (Tarboton).
 

@@ -3,9 +3,10 @@ This script distributes excess energy in the snowpack to snowmelt, updates snow 
 """
 
 import numpy as np
+import constants as const
 
 def calc_energy_to_melt(lastswe, lastsnowdepth, packsnowdensity, lastenergy, 
-                        lastpackwater, LatHeatFreez, WaterDens, SnowMelt, MeltEnergy):
+                        lastpackwater, SnowMelt, MeltEnergy):
     """
     Distributes excess energy to snowmelt, updates snow water equivalent (SWE), snow depth, and the energy balance.
 
@@ -16,8 +17,6 @@ def calc_energy_to_melt(lastswe, lastsnowdepth, packsnowdensity, lastenergy,
     - packsnowdensity: Snowpack density (array).
     - lastenergy: Available energy in the snowpack (array).
     - lastpackwater: Current water content in the snowpack (array).
-    - LatHeatFreez: Latent heat of fusion (constant).
-    - WaterDens: Density of water (constant).
     - SnowMelt: Amount of snowmelt generated during the time step (array).
     - MeltEnergy: Energy used for snowmelt (array).
 
@@ -32,32 +31,32 @@ def calc_energy_to_melt(lastswe, lastsnowdepth, packsnowdensity, lastenergy,
     
     # Case where SWE is positive and energy is available
     b = (lastswe > 0) & (lastenergy > 0)
-    
-    # Calculate potential melt in meters of water equivalent
-    potmelt = lastenergy[b] / (LatHeatFreez * WaterDens)
-    
     # Initialize melt array
     melt = np.zeros_like(lastpackwater)
     
-    # Actual melt is the minimum of available SWE or potential melt
-    melt[b] = np.minimum(lastswe[b], potmelt)
-    melt[melt < 0] = 0
+    if np.any(b):
+        # Calculate potential melt in meters of water equivalent
+        potmelt = lastenergy[b] / (const.LATHEATFREEZ * const.WATERDENS)    
+        
+        # Actual melt is the minimum of available SWE or potential melt
+        melt[b] = np.minimum(lastswe[b], potmelt)
+        melt[melt < 0] = 0
+        
+        # Add melt to the monthly melt accumulation
+        SnowMelt[b] = melt[b]
+        
+        # Calculate the energy used for melting
+        meltenergy = melt[b] * const.LATHEATFREEZ * const.WATERDENS
+        lastenergy[b] -= meltenergy
+        MeltEnergy[b] = meltenergy
     
-    # Add melt to the monthly melt accumulation
-    SnowMelt[:, b] = melt[b]
-    
-    # Calculate the energy used for melting
-    meltenergy = melt[b] * LatHeatFreez * WaterDens
-    lastenergy[b] -= meltenergy
-    MeltEnergy[:, b] = meltenergy
-
     # Update water content in the snowpack
-    lastpackwater += melt
-    
+    lastpackwater += melt    
     # Update SWE and snow depth
     lastswe -= melt
+    
     b = lastswe > 0
-    lastsnowdepth[b] = lastswe[b] * WaterDens / packsnowdensity[b]
+    lastsnowdepth[b] = lastswe[b] * const.WATERDENS / packsnowdensity[b]
     lastsnowdepth[~b] = 0
 
     return SnowMelt, MeltEnergy, lastpackwater, lastswe, lastsnowdepth

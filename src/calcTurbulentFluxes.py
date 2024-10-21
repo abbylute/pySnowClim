@@ -3,8 +3,13 @@ Calculate Turbulent Heat and Mass Fluxes Using Richardson Number Parameterizatio
 """
 import numpy as np
 
-def calc_turbulent_fluxes(stability, windHt, z_0, tempHt, z_h, k, vs, lastsnowtemp, tavg, 
-                          Ca, psfc, huss, E0_value, E0_app, E0_stable, sec_in_ts):
+from calcSpecificHumidity import calculate_specific_humidity
+from calcLatHeatVap import calculate_lat_heat_vap
+from calcLatHeatSub import calculate_lat_heat_sub
+import constants as const
+
+def calc_turbulent_fluxes(stability, windHt, z_0, tempHt, z_h, vs, lastsnowtemp, tavg, 
+                          psfc, huss, E0_value, E0_app, E0_stable, sec_in_ts):
 
     """
     Calculate turbulent fluxes of heat and mass (evaporation/sublimation) using 
@@ -16,7 +21,6 @@ def calc_turbulent_fluxes(stability, windHt, z_0, tempHt, z_h, k, vs, lastsnowte
     z_0: Roughness length (m)
     tempHt: Temperature measurement height (m)
     z_h: Reference height for temperature profile (m)
-    k: von Kármán constant (dimensionless)
     vs: Wind speed (m/s)
     lastsnowtemp: Snow surface temperature (C)
     tavg: Air temperature (C)
@@ -48,10 +52,10 @@ def calc_turbulent_fluxes(stability, windHt, z_0, tempHt, z_h, k, vs, lastsnowte
     
     # Calculate vapor densities (kg/m^3)
     rhoa = huss
-    rhos = calc_specific_humidity(lastsnowtemp, psfc)
+    rhos = calculate_specific_humidity(lastsnowtemp, psfc)
     
     # Exchange coefficient for neutral conditions (CHN)
-    CHN = k**2 / (np.log(windHt / z_0) * np.log(tempHt / z_h))
+    CHN = const.K**2 / (np.log(windHt / z_0) * np.log(tempHt / z_h))
     
     if stability:
         # Calculate the bulk Richardson number
@@ -72,8 +76,8 @@ def calc_turbulent_fluxes(stability, windHt, z_0, tempHt, z_h, k, vs, lastsnowte
         CH = CHN
     
     # Latent heat of vaporization and sublimation
-    LatHeatVap = calc_latent_heat_vap(lastsnowtemp)  # kJ/kg
-    LatHeatSub = calc_latent_heat_sub(lastsnowtemp)  # kJ/kg
+    LatHeatVap = calculate_lat_heat_vap(lastsnowtemp)  # kJ/kg
+    LatHeatSub = calculate_lat_heat_sub(lastsnowtemp)  # kJ/kg
     
     # Windless exchange coefficient
     Ex = np.zeros_like(vs)
@@ -83,7 +87,7 @@ def calc_turbulent_fluxes(stability, windHt, z_0, tempHt, z_h, k, vs, lastsnowte
         Ex[Rib > 0] = E0
     
     # Sensible heat flux (H)
-    H = -(pa * Ca * CH * vs + Ex) * (lastsnowtemp - tavg)
+    H = -(pa * const.CA * CH * vs + Ex) * (lastsnowtemp - tavg)
     
     # Latent heat flux (E)
     if E0_app == 1:

@@ -24,14 +24,16 @@ def calc_energy_to_cc(lastpackcc, lastenergy, CCenergy):
 
     # Case 2: Cold content can be fully balanced by the available energy
     b = (-lastpackcc > 0) & (-lastpackcc <= lastenergy)
-    lastenergy[b] += lastpackcc[b]
-    lastpackcc[b] = 0
-    CCenergy[:, b] = np.minimum(0, lastenergy[b])
+    if np.any(b):
+        lastenergy[b] += lastpackcc[b]
+        lastpackcc[b] = 0
+        CCenergy[b] = np.minimum(0, lastenergy[b])
 
     # Case 3: Energy is insufficient to eliminate cold content, so some cold content remains
     b = (-lastpackcc > lastenergy)
-    lastpackcc[b] += lastenergy[b]
-    CCenergy[:, b] = np.minimum(0, lastenergy[b])
-    lastenergy[b] = 0
+    if np.any(b):
+        lastpackcc[b] += lastenergy[b]
+        CCenergy[b] = np.minimum(0, lastenergy[b])
+        lastenergy[b] = 0
 
     return lastpackcc, lastenergy, CCenergy

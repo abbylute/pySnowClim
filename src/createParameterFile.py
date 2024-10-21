@@ -4,18 +4,17 @@ Default values are based on the application of the snow model to the western Uni
 The parameters include settings for albedo, stability, snow density, and other
 model configurations.
 
-The parameters are saved to a binary file using pickle for later retrieval by the model.
 """
+import numpy as np
+from datetime import datetime, timedelta
 
-import pickle
 
-
-def create_parameter_file(cal, hours_in_ts, stability=None, windHt=None, tempHt=None,
+def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=None, tempHt=None,
                           snowoff_month=None, snowoff_day=None, albedo_option=None,
                           max_albedo=None, z_0=None, z_h=None, lw_max=None,
                           Tstart=None, Tadd=None, maxtax=None, E0=None, E0_app=None,
                           E0_stable=None, Ts_add=None, smooth_hr=None, ground_albedo=None,
-                          snow_emis=None, snow_dens_default=None, G=None, parameterfilename=None):
+                          snow_emis=None, snow_dens_default=None, G=None):
     """
     Writes parameters to a dictionary and saves it as a binary file.
     Default values are used where none are provided.
@@ -51,11 +50,17 @@ def create_parameter_file(cal, hours_in_ts, stability=None, windHt=None, tempHt=
     :param parameterfilename: Name of the file to save the parameter dictionary
     """
 
-    if cal is None:
-        raise ValueError("Argument 'cal' is required.")
+    if cal is None or hours_in_ts is None:
+        # Time period for the model run (2001-10-01 to 2002-09-30)
+        hours_in_ts = 4
+        cal = np.array([[d.year, d.month, d.day, d.hour, d.minute, d.second]
+                        for d in (datetime(2001, 10, 1) + timedelta(hours=i * hours_in_ts)
+                                  for i in range(int((datetime(2002, 9, 30) - datetime(2001, 10, 1)).total_seconds() / 3600 / hours_in_ts)))])
+        # raise ValueError("Argument 'cal' and 'hours_in_ts' are required.")
+
     
     # Create a dictionary to store parameters
-    S = {
+    parameters = {
         'cal': cal, #%datevec(datetime(2000,10,1,0,0,0):hours(S.hours_in_ts):datetime(2013,9,30,23,0,0));
         'hours_in_ts': hours_in_ts,
         'stability': 1 if stability is None else stability,
@@ -82,7 +87,4 @@ def create_parameter_file(cal, hours_in_ts, stability=None, windHt=None, tempHt=
         'G': (173 / 86400) if G is None else G #% ground conduction (kJ/m2/s), from Walter et al., (2005)
     }
     
-    # Save the dictionary to a binary file using pickle
-    if parameterfilename:
-        with open(parameterfilename, 'wb') as file:
-            pickle.dump(S, file)
+    return parameters    
