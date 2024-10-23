@@ -91,11 +91,7 @@ def run_model(forcings_path, parameters_path):
     forcings_data = _load_forcing_data(forcings_path)
     
     print('Files loaded, running the model...')
-    (SnowMelt, SnowWaterEq, SFE, SnowDepth, SnowDensity, 
-     Sublimation, Condensation, SnowTemp, MeltEnergy, Energy, Albedo, 
-     SnowYN, RaininSnow, Runoff, RefrozenWater, PackWater, LW_down, LW_up, 
-     SW_down, SW_up, Q_latent, Q_sensible, Q_precip, PackCC, CCenergy, 
-     CCsnowfall) = run_snowclim_model(forcings_data, parameters)
+    model_output = run_snowclim_model(forcings_data, parameters)
     
-    return None
+    return model_output
     
