@@ -54,6 +54,7 @@ def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth,
         lastpackcc[bb] = 0
 
     # Update snow density, assuming snow depth remains unchanged
-    packsnowdensity = lastswe * const.WATERDENS / lastsnowdepth
+    bb = lastsnowdepth > 0
+    packsnowdensity[bb] = lastswe[bb] * const.WATERDENS / lastsnowdepth[bb]
 
     return lastpackwater, lastswe, lastpackcc, packsnowdensity, RefrozenWater
