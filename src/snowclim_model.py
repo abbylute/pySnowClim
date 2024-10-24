@@ -207,19 +207,20 @@ def run_snowclim_model(forcings_data, parameters):
             model_vars.Albedo[i, a] = lastalbedo[a]
 
             # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---
-            H = np.zeros(lastsnowtemp.size, dtype=np.float32)
-            E = np.zeros(lastsnowtemp.size, dtype=np.float32)
-            EV = np.zeros(lastsnowtemp.size, dtype=np.float32)
-            H[a], E[a], EV[a] = calc_turbulent_fluxes(parameters['stability'], 
+            H = np.zeros(forcings_data['lat'].size, dtype=np.float32)
+            E = np.zeros(forcings_data['lat'].size, dtype=np.float32)
+            EV = np.zeros(forcings_data['lat'].size, dtype=np.float32)
+            aa = a & (forcings_data['vs'][i,:]>0)
+            H[aa], E[aa], EV[aa] = calc_turbulent_fluxes(parameters['stability'], 
                                                         parameters['windHt'], 
                                                         parameters['z_0'], 
                                                         parameters['tempHt'], 
                                                         parameters['z_h'], 
-                                                        forcings_data['vs'][i, a],
-                                                        lastsnowtemp[a], 
-                                                        forcings_data['tavg'][i, a], 
-                                                        forcings_data['psfc'][i, a], 
-                                                        forcings_data['huss'][i, a], 
+                                                        forcings_data['vs'][i, aa],
+                                                        lastsnowtemp[aa], 
+                                                        forcings_data['tavg'][i, aa], 
+                                                        forcings_data['psfc'][i, aa], 
+                                                        forcings_data['huss'][i, aa], 
                                                         parameters['E0_value'],
                                                         parameters['E0_app'], 
                                                         parameters['E0_stable'], 
