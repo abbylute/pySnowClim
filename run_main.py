@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     print('Starting pySnowClim model...')
     
-    ra = run_model('data/', 'data/parameters.mat')
+    model_output = run_model('data/', 'data/parameters.mat')
     print('pySnowClim model finished!')
 
 
