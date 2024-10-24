@@ -35,30 +35,28 @@ def perform_precipitation_operations(forcings_data, parameters):
         Number of seconds in each time step.
     - R_m: np.ndarray
         Rainfall amount after phase calculation.
-    - SFE: np.ndarray
+    - SnowfallWaterEq: np.ndarray
         Snowfall equivalent after phase calculation.
     - newsnowdensity: np.ndarray
         Fresh snow density based on the average temperature.
     """
 
     # Calculate phase (snow or rain fraction)
-    passnow = calc_phase(forcings_data['tavg'], 
-                         forcings_data['relhum'], 
-                         False)  # False means not binary (returns fraction)
+    passnow = calc_phase(forcings_data['tavg'], forcings_data['relhum']) 
 
     # Separate rain and snow components of precipitation
     R_m = forcings_data['ppt'] * (1 - passnow)
-    SFE = forcings_data['ppt'] * passnow
+    SnowfallWaterEq = forcings_data['ppt'] * passnow
 
     # Threshold for snowfall equivalent and adjust rain accordingly
     threshold = 0.0001 * parameters['hours_in_ts']
-    SFE[SFE < threshold] = 0
-    R_m[SFE < threshold] = forcings_data['ppt'][SFE < threshold]
+    SnowfallWaterEq[SnowfallWaterEq < threshold] = 0
+    R_m[SnowfallWaterEq < threshold] = forcings_data['ppt'][SnowfallWaterEq < threshold]
 
     # Calculate fresh snow density based on temperature
     newsnowdensity = calc_fresh_snow_density(forcings_data['tavg'])
 
-    return R_m, SFE, newsnowdensity
+    return R_m, SnowfallWaterEq, newsnowdensity
 
 
 def initialize_snowpack_variables(n_lat, parameters):
@@ -110,43 +108,12 @@ def run_snowclim_model(forcings_data, parameters):
     Returns:
         model_vars (SnowModelVariables class): 
     """
-
     cal = parameters['cal']
-
-    outdim = forcings_data['ppt'].shape
     model_vars = SnowModelVariables(forcings_data['ppt'].shape)
-
-    # SnowDepth = np.full(outdim, np.nan, dtype=np.float32)
-    #SnowWaterEq = np.full(outdim, np.nan, dtype=np.float32)
-    # SnowMelt = np.full(outdim, np.nan, dtype=np.float32)
-    # Sublimation = np.full(outdim, np.nan, dtype=np.float32)
-    #Condensation = np.full(outdim, np.nan, dtype=np.float32)
-    #Runoff = np.full(outdim, np.nan, dtype=np.float32)
-    #RaininSnow = np.full(outdim, np.nan, dtype=np.float32)
-    # RefrozenWater = np.full(outdim, np.nan, dtype=np.float32)
-    # PackWater = np.full(outdim, np.nan, dtype=np.float32)
-    # SnowYN = np.full(outdim, np.nan, dtype=np.float32)
-
-    # SnowTemp = np.full(outdim, np.nan, dtype=np.float32)
-    # Albedo = np.full(outdim, np.nan, dtype=np.float32)
-    # SnowDensity = np.full(outdim, np.nan, dtype=np.float32)
-
-    # Q_sensible = np.full(outdim, np.nan, dtype=np.float32)
-    # Q_latent = np.full(outdim, np.nan, dtype=np.float32)
-    # Q_precip = np.full(outdim, np.nan, dtype=np.float32)
-    # LW_up = np.full(outdim, np.nan, dtype=np.float32)
-    # LW_down = np.full(outdim, np.nan, dtype=np.float32)
-    # SW_up = np.full(outdim, np.nan, dtype=np.float32)
-    # SW_down = np.full(outdim, np.nan, dtype=np.float32)
-    # Energy = np.full(outdim, np.nan, dtype=np.float32)
-    # MeltEnergy = np.full(outdim, np.nan, dtype=np.float32)
-    # PackCC = np.full(outdim, np.nan, dtype=np.float32)
-    # CCsnowfall = np.full(outdim, np.nan, dtype=np.float32)
-    # CCenergy = np.full(outdim, np.nan, dtype=np.float32)
 
     # number of seconds in each time step
     sec_in_ts = parameters['hours_in_ts'] * const.MIN_2_SECS
-    R_m, SFE, newsnowdensity = perform_precipitation_operations(forcings_data, parameters)
+    R_m, SnowfallWaterEq, newsnowdensity = perform_precipitation_operations(forcings_data, parameters)
 
     #--- For each time step ---
     for i in range(cal.shape[0]):        
@@ -159,9 +126,9 @@ def run_snowclim_model(forcings_data, parameters):
             snowage = np.zeros(forcings_data['lat'].size, dtype=np.float32)
                                                                         
         # --- new mass inputs ---
-        newswe = SFE[i, :]
+        newswe = SnowfallWaterEq[i, :]
         newrain = R_m[i, :]
-        newsnowdepth = SFE[i, :] * const.WATERDENS / newsnowdensity[i, :]
+        newsnowdepth = SnowfallWaterEq[i, :] * const.WATERDENS / newsnowdensity[i, :]
         newsnowdens = newsnowdensity[i, :]
 
         # --- Calculate snow temperature and cold contents ---
@@ -240,9 +207,9 @@ def run_snowclim_model(forcings_data, parameters):
             model_vars.Albedo[i, a] = lastalbedo[a]
 
             # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---
-            H = np.zeros(forcings_data['lat'].size, dtype=np.float32)
-            E = np.zeros(forcings_data['lat'].size, dtype=np.float32)
-            EV = np.zeros(forcings_data['lat'].size, dtype=np.float32)
+            H = np.zeros(lastsnowtemp.size, dtype=np.float32)
+            E = np.zeros(lastsnowtemp.size, dtype=np.float32)
+            EV = np.zeros(lastsnowtemp.size, dtype=np.float32)
             H[a], E[a], EV[a] = calc_turbulent_fluxes(parameters['stability'], 
                                                         parameters['windHt'], 
                                                         parameters['z_0'], 
@@ -391,7 +358,7 @@ def run_snowclim_model(forcings_data, parameters):
 
     #--- Prepare outputs ---
     model_vars.SnowWaterEq = model_vars.SnowWaterEq * const.WATERDENS
-    SFE = SFE * const.WATERDENS
+    model_vars.SnowfallWaterEq = SnowfallWaterEq * const.WATERDENS
     model_vars.SnowMelt = model_vars.SnowMelt * const.WATERDENS
     model_vars.Sublimation = model_vars.Sublimation * const.WATERDENS
     model_vars.Condensation = model_vars.Condensation * const.WATERDENS

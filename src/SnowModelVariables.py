@@ -9,8 +9,8 @@ to be used in the simulation of snow and energy balance processes.
 
 SnowMelt (array-like): Snow melt (m).
 SnowWaterEq (array-like): Snow water equivalent (m).
-SFE (array-like): Snowfall water equivalent (m).
-SnowDepth (array-like): Snow depth (mm).
+SnowfallWaterEq (array-like): Snowfall water equivalent (m).
+SnowDepth (array-like): Snow depth (m).
 SnowDensity (array-like): Snowpack density (kg/m³).
 Sublimation (array-like): Snow sublimation (m).
 Condensation (array-like): Snow condensation (m).
@@ -48,7 +48,7 @@ class SnowModelVariables:
     outdim: tuple
     SnowMelt: np.ndarray = field(init=False)
     SnowWaterEq: np.ndarray = field(init=False)
-    SFE: np.ndarray = field(init=False)  # Snowfall equivalent
+    SnowfallWaterEq: np.ndarray = field(init=False)  # Snowfall equivalent
     SnowDepth: np.ndarray = field(init=False)
     SnowDensity: np.ndarray = field(init=False)
     Sublimation: np.ndarray = field(init=False)
@@ -77,7 +77,7 @@ class SnowModelVariables:
         # Initialize all the arrays with NaN values
         self.SnowMelt = np.full(self.outdim, np.nan, dtype=np.float32)
         self.SnowWaterEq = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SFE = np.full(self.outdim, np.nan, dtype=np.float32)  # Snowfall equivalent
+        self.SnowfallWaterEq = np.full(self.outdim, np.nan, dtype=np.float32)  # Snowfall equivalent
         self.SnowDepth = np.full(self.outdim, np.nan, dtype=np.float32)
         self.SnowDensity = np.full(self.outdim, np.nan, dtype=np.float32)
         self.Sublimation = np.full(self.outdim, np.nan, dtype=np.float32)
