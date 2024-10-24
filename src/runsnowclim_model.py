@@ -11,6 +11,7 @@ The script can be adapted for different parameters, time periods, or datasets.
 import os
 import pickle
 import scipy.io
+import numpy as np
 
 from createParameterFile import create_dict_parameters
 from snowclim_model import run_snowclim_model
@@ -83,8 +84,28 @@ def _load_parameter_file(parameterfilename):
     return parameters
 
 
+def _save_outputs(model_output, outputs_path=None):
+    """
+    Save model outputs to file.
 
-def run_model(forcings_path, parameters_path):
+    Args:
+        model_output (class): class containing snow model outputs
+        outputs_path (str): name of directory to save outputs to.
+
+    Returns:
+        nothing
+    """
+    if outputs_path is not None:
+    # TODO: here or perhaps before the model runs, add a check that the output directory exists
+    # TODO: for now, saving these as .npy because it is easy and avoids added complications. 
+    #       May want to save in a more accessible format eventually.
+        variables_to_save = list(vars(model_output).keys())
+        variables_to_save.remove('outdim')
+        for v in variables_to_save:
+            np.save(outputs_path + v + '.npy', getattr(model_output,v))
+
+
+def run_model(forcings_path, parameters_path, outputs_path):
     
     print('Loading necessary files...')
     parameters = _load_parameter_file(parameters_path)
@@ -93,5 +114,7 @@ def run_model(forcings_path, parameters_path):
     print('Files loaded, running the model...')
     model_output = run_snowclim_model(forcings_data, parameters)
     
+    _save_outputs(model_output, outputs_path)
+
     return model_output
     

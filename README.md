@@ -55,7 +55,7 @@ If you wish to modify the paths or input files, adjust the `forcings_path` and
 
 Example:
 ```
-ra = run_model('path_to_forcing_data/', 'path_to_parameters/parameters.mat')
+ra = run_model('path_to_forcing_data/', 'path_to_parameters/parameters.mat', 'path_to_outputs')
 ```
 
 5. Output
