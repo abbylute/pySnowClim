@@ -9,15 +9,14 @@ from calcLatHeatSub import calculate_lat_heat_sub
 import constants as const
 
 
-def calc_turbulent_fluxes(parameters,  tempHt,  vs, lastsnowtemp, tavg,
+def calc_turbulent_fluxes(parameters, vs, lastsnowtemp, tavg,
                           psfc, huss, sec_in_ts):
     """
     Calculate turbulent fluxes of heat and mass (evaporation/sublimation) using
     Richardson number parameterization based on Essery et al. (2013).
 
     Parameters:
-    parameters: dictionary with the default parameters to be used.
-    tempHt: Temperature measurement height (m)
+    parameters: dictionary with the parameters to be used.
     vs: Wind speed (m/s)
     lastsnowtemp: Snow surface temperature (C)
     tavg: Air temperature (C)
@@ -49,7 +48,7 @@ def calc_turbulent_fluxes(parameters,  tempHt,  vs, lastsnowtemp, tavg,
     # Exchange coefficient for neutral conditions (CHN)
     CHN = const.K**2 / \
         (np.log(parameters['windHt'] / parameters['z_0'])
-         * np.log(tempHt / parameters['z_h']))
+         * np.log(parameters['tempHt'] / parameters['z_h']))
 
     if parameters['stability']:
         # Calculate the bulk Richardson number
