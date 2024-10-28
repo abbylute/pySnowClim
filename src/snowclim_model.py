@@ -137,25 +137,27 @@ def run_snowclim_model(forcings_data, parameters):
     Returns:
         model_vars (SnowModelVariables class):
     """
-    cal = parameters['cal']
-    model_vars = SnowModelVariables(forcings_data['ppt'].shape)
+    model_vars = SnowModelVariables(forcings_data['forcings']['ppt'].shape)
 
     # number of seconds in each time step
     sec_in_ts = parameters['hours_in_ts'] * const.MIN_2_SECS
     rainfall, SnowfallWaterEq, newsnowdensity = _perform_precipitation_operations(
-        forcings_data, parameters)
+        forcings_data['forcings'], parameters)
 
+    coords = forcings_data['coords']
+    size_lat = coords['lat'].size
+    
     # --- For each time step ---
-    for i in range(cal.shape[0]):
-        input_forcings = {key: value[i, :] for key, value in forcings_data.items()}
+    for i, time_value in enumerate(forcings_data['coords']['time']):
+        input_forcings = {key: value[i, :] for key, value in forcings_data['forcings'].items()}
 
         # Reset to 0 snow at the specified time of year
-        if i == 0 or (cal[i, 1] == parameters['snowoff_month'] and cal[i, 2] == parameters['snowoff_day']):
+        if i == 0 or (time_value[1] == parameters['snowoff_month'] and time_value[2] == parameters['snowoff_day']):
             (lastalbedo, lastswe, lastsnowdepth, packsnowdensity, lastpackcc,
-             lastpackwater) = initialize_snowpack_variables(input_forcings['lat'].size,
+             lastpackwater) = initialize_snowpack_variables(size_lat,
                                                             parameters)
-            lastpacktemp = np.zeros(input_forcings['lat'].size, dtype=np.float32)
-            snowage = np.zeros(input_forcings['lat'].size, dtype=np.float32)
+            lastpacktemp = np.zeros(size_lat, dtype=np.float32)
+            snowage = np.zeros(size_lat, dtype=np.float32)
 
         # --- new mass inputs ---
         newswe = SnowfallWaterEq[i, :]
@@ -227,18 +229,18 @@ def run_snowclim_model(forcings_data, parameters):
                                               newswe,
                                               lastswe,
                                               lastsnowtemp,
-                                              input_forcings['lat'],
-                                              cal[i, 2],
-                                              cal[i, 3],
+                                              coords['lat'].ravel(),
+                                              time_value[1],
+                                              time_value[2],
                                               snowage,
                                               lastpackcc,
                                               sec_in_ts)
             model_vars.Albedo[i, exist_snow] = lastalbedo[exist_snow]
 
             # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---
-            H = np.zeros(input_forcings['lat'].size, dtype=np.float32)
-            E = np.zeros(input_forcings['lat'].size, dtype=np.float32)
-            EV = np.zeros(input_forcings['lat'].size, dtype=np.float32)
+            H = np.zeros(size_lat, dtype=np.float32)
+            E = np.zeros(size_lat, dtype=np.float32)
+            EV = np.zeros(size_lat, dtype=np.float32)
             has_snow_and_wind = exist_snow & (input_forcings['vs'] > 0)
             H[has_snow_and_wind], E[has_snow_and_wind], EV[has_snow_and_wind] = calc_turbulent_fluxes(
                 parameters,
@@ -256,15 +258,15 @@ def run_snowclim_model(forcings_data, parameters):
             model_vars.Q_precip[i, :] = P
 
             # --- Net downward solar flux at surface (kJ/m2/timestep) ---
-            Sup = np.zeros(input_forcings['lat'].size, dtype=np.float32)
+            Sup = np.zeros(size_lat, dtype=np.float32)
             Sup[exist_snow] = input_forcings['solar'][exist_snow] * lastalbedo[exist_snow]
-            Sdn = np.zeros(input_forcings['lat'].size, dtype=np.float32)
+            Sdn = np.zeros(size_lat, dtype=np.float32)
             Sdn[exist_snow] = input_forcings['solar'][exist_snow]
 
             # --- Longwave flux up from snow surface (kJ/m2/timestep) ---
-            Ldn = np.zeros(input_forcings['lat'].size, dtype=np.float32)
+            Ldn = np.zeros(size_lat, dtype=np.float32)
             Ldn[exist_snow] = input_forcings['lrad'][exist_snow]
-            Lt = np.zeros(input_forcings['lat'].size, dtype=np.float32)
+            Lt = np.zeros(size_lat, dtype=np.float32)
             Lt[exist_snow] = calc_longwave(parameters['snow_emis'],
                                            lastsnowtemp[exist_snow],
                                            input_forcings['lrad'][exist_snow],
@@ -384,8 +386,7 @@ def run_snowclim_model(forcings_data, parameters):
         else:
             # Initialize arrays with default values
             (lastalbedo, lastswe, lastsnowdepth, packsnowdensity, lastpackcc,
-             lastpackwater) = initialize_snowpack_variables(forcings_data['lat'].size,
-                                                            parameters)
+             lastpackwater) = initialize_snowpack_variables(size_lat, parameters)
 
     # --- Prepare outputs ---
     model_vars = _prepare_outputs(model_vars, SnowfallWaterEq)

@@ -215,8 +215,8 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
         Current day (for inclination angle calculation).
     - lastswe: np.ndarray
         Array of last snow water equivalent.
-    - lat: np.ndarray
-        Array of latitudes.
+    - parameters: dict
+        A dictionary of model parameters.
     - sec_in_ts: float
         Seconds in the time step.
 
@@ -243,40 +243,43 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
 
     # For new snow depths > 0.01 m
     b = newsnowdepth > 0.01
-    albedo[b] = albedo_vo / 2 + albedo_iro / 2
-    snowage[b] = 0
-
-    inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
-    c = np.cos(inc) < 0.5
-    fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
-    extra = np.zeros_like(inc)
-    extra[c] = 0.2 * fpsi * (1 - albedo_vo) + 0.2 * fpsi * (1 - albedo_iro)
-    albedo[b] += extra
+    if np.any(b):
+        albedo[b] = albedo_vo / 2 + albedo_iro / 2
+        snowage[b] = 0
+    
+        inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
+        c = np.cos(inc) < 0.5
+        fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
+        extra = np.zeros_like(inc)
+        extra[c] = 0.2 * fpsi * (1 - albedo_vo) + 0.2 * fpsi * (1 - albedo_iro)
+        albedo[b] += extra
 
     # For new snow depths <= 0.01 m (albedo is a function of snow age)
     b = ~b
-    r1 = np.exp(5000 * (1 / 273.16 - 1. / lastsnowtemp[b]))
-    r2 = np.minimum(r1**10, 1)
-    r3 = 0.03
-
-    inc_age = (r1 + r2 + r3) / 1e6 * sec_in_ts
-    snowage[b] += inc_age
-    Fage = snowage[b] / (1 + snowage[b])
-
-    albedo_1 = (1 - Cv * Fage) * albedo_vo
-    albedo_2 = (1 - Cir * Fage) * albedo_iro
-    albedo[b] = albedo_1 / 2 + albedo_2 / 2
-
-    inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
-    c = np.cos(inc) < 0.5
-    fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
-    extra = np.zeros_like(inc)
-    extra[c] = 0.2 * fpsi * (1 - albedo_1[c]) + 0.2 * fpsi * (1 - albedo_2[c])
-    albedo[b] += extra
+    if np.any(b):    
+        r1 = np.exp(5000 * (1 / 273.16 - 1. / lastsnowtemp[b]))
+        r2 = np.minimum(r1**10, 1)
+        r3 = 0.03
+    
+        inc_age = (r1 + r2 + r3) / 1e6 * sec_in_ts
+        snowage[b] += inc_age
+        Fage = snowage[b] / (1 + snowage[b])
+    
+        albedo_1 = (1 - Cv * Fage) * albedo_vo
+        albedo_2 = (1 - Cir * Fage) * albedo_iro
+        albedo[b] = albedo_1 / 2 + albedo_2 / 2
+    
+        inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
+        c = np.cos(inc) < 0.5
+        fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
+        extra = np.zeros_like(inc)
+        extra[c] = 0.2 * fpsi * (1 - albedo_1[c]) + 0.2 * fpsi * (1 - albedo_2[c])
+        albedo[b] += extra
 
     # For no snow case
     b = lastswe == 0
-    albedo[b] = parameters['ground_albedo']
-    snowage[b] = 0
+    if np.any(b):
+        albedo[b] = parameters['ground_albedo']
+        snowage[b] = 0
 
     return albedo, snowage

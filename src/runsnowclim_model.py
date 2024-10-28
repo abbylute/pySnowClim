@@ -44,18 +44,24 @@ def _load_forcing_data(data_dir):
     tdmean = scipy.io.loadmat(f'{data_dir}tdmean.mat')['tdmean']
     
     # Return the data as a dictionary
-    return {
-        'lat': lat,
-        'lon': lon,
-        'lrad': lrad,
-        'solar': solar,
-        'tavg': tavg,
-        'ppt': ppt,
-        'vs': vs,
-        'psfc': psfc,
-        'huss': huss,
-        'relhum': relhum,
-        'tdmean': tdmean
+    return {'coords':
+            {
+            'lat': lat,
+            'lon': lon,
+            'time': None,
+            },
+        'forcings':
+            {
+            'lrad': lrad,
+            'solar': solar,
+            'tavg': tavg,
+            'ppt': ppt,
+            'vs': vs,
+            'psfc': psfc,
+            'huss': huss,
+            'relhum': relhum,
+            'tdmean': tdmean
+        }
     }
 
 
@@ -110,6 +116,8 @@ def run_model(forcings_path, parameters_path, outputs_path):
     print('Loading necessary files...')
     parameters = _load_parameter_file(parameters_path)
     forcings_data = _load_forcing_data(forcings_path)
+    
+    forcings_data['coords']['time'] = parameters['cal']
     
     print('Files loaded, running the model...')
     model_output = run_snowclim_model(forcings_data, parameters)
