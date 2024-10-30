@@ -14,7 +14,7 @@ def calc_phase(temp_celsius, rh):
     
     Returns:
     --------
-    - passsnow: Precipitation classified as snow (in precipitation units). 
+    - psnow: Portion of precipitation classified as snow. 
     """
     # TODO add the below coefficients to the constant file
     # Coefficients from Jennings et al., 2018 (Table 2)
@@ -24,7 +24,5 @@ def calc_phase(temp_celsius, rh):
 
     # Calculate probability of snow
     psnow = 1.0 / (1.0 + np.exp(a + b * temp_celsius + g * rh))
-    precip = np.ones(temp_celsius.shape)
-    passsnow = psnow * precip
     
-    return passsnow.astype(np.float32)
+    return psnow
