@@ -55,8 +55,9 @@ def calc_sublimation(E, SnowWaterEq, SnowDepth, SnowDensity, lastsnowtemp, lastp
 
     # Output sublimation and condensation
     b = Sublimation > 0
-    sublimation[b] += Sublimation[b]
-    condensation[~b] += Sublimation[~b]
+    sublimation[b] = Sublimation[b]
+    condensation[~b] = Sublimation[~b]
+
 
     # Update packwater by subtracting evaporation
     lastpackwater = np.maximum(0, lastpackwater - Evaporation)
