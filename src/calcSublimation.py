@@ -27,10 +27,6 @@ def calc_sublimation(E, SnowWaterEq, SnowDepth, SnowDensity, lastsnowtemp, lastp
     --------
     - Updated sublimation, condensation, SnowWaterEq, SnowDepth, lastpackcc, SnowDensity, lastpackwater.
     """
-
-    # Latent heat of sublimation (kJ/kg)
-    lambdaS = 2834.1 - 0.29 * lastsnowtemp - 0.004 * lastsnowtemp ** 2 
-
     # Calculate sublimation and evaporation
     Sublimation = np.zeros(E.size)
     Evaporation = np.zeros(E.size)
@@ -42,7 +38,6 @@ def calc_sublimation(E, SnowWaterEq, SnowDepth, SnowDensity, lastsnowtemp, lastp
     f1 = np.where(SnowWaterEq <= Sublimation)[0]  # Complete sublimation, no snow left
 
     # For non-complete sublimation
-    initialSWE = SnowWaterEq[f]
     SnowWaterEq[f] -= Sublimation[f]
     SnowDepth[f] = SnowWaterEq[f] / SnowDensity[f] * const.WATERDENS
 

@@ -18,7 +18,7 @@ SnowTemp (array-like): Snow surface temperature (°C).
 MeltEnergy (array-like): Energy used for melting snow (kJ/m²/timestep).
 Energy (array-like): Net energy to the snowpack (kJ/m²/timestep).
 Albedo (array-like): Snow surface albedo.
-SnowYN (array-like): Snow cover binary (1 for snow, 0 for no snow).
+ExistSnow (array-like): Snow cover binary (1 for snow, 0 for no snow).
 RaininSnow (array-like): Rain added to the snowpack (m).
 Runoff (array-like): Runoff from the snowpack (m).
 RefrozenWater (array-like): Liquid water refrozen in the snowpack (m).
@@ -35,69 +35,38 @@ CCenergy (array-like): Cold content changes due to energy flux (kJ/m²/timestep)
 CCsnowfall (array-like): Cold content added by snowfall (kJ/m²/timestep).
 """
 
-from dataclasses import dataclass, field
 import numpy as np
 
-@dataclass
 class SnowModelVariables:
     """
     SnowModelVariables initializes the key variables needed to run the snow model,
     pre-allocating arrays with NaN values for snowpack and energy flux calculations.
     """
 
-    outdim: tuple
-    SnowMelt: np.ndarray = field(init=False)
-    SnowWaterEq: np.ndarray = field(init=False)
-    SnowfallWaterEq: np.ndarray = field(init=False)  # Snowfall equivalent
-    SnowDepth: np.ndarray = field(init=False)
-    SnowDensity: np.ndarray = field(init=False)
-    Sublimation: np.ndarray = field(init=False)
-    Condensation: np.ndarray = field(init=False)
-    SnowTemp: np.ndarray = field(init=False)
-    MeltEnergy: np.ndarray = field(init=False)
-    Energy: np.ndarray = field(init=False)
-    Albedo: np.ndarray = field(init=False)
-    SnowYN: np.ndarray = field(init=False)
-    RaininSnow: np.ndarray = field(init=False)
-    Runoff: np.ndarray = field(init=False)
-    RefrozenWater: np.ndarray = field(init=False)
-    PackWater: np.ndarray = field(init=False)
-    LW_down: np.ndarray = field(init=False)
-    LW_up: np.ndarray = field(init=False)
-    SW_down: np.ndarray = field(init=False)
-    SW_up: np.ndarray = field(init=False)
-    Q_latent: np.ndarray = field(init=False)
-    Q_sensible: np.ndarray = field(init=False)
-    Q_precip: np.ndarray = field(init=False)
-    PackCC: np.ndarray = field(init=False)
-    CCenergy: np.ndarray = field(init=False)
-    CCsnowfall: np.ndarray = field(init=False)
-
-    def __post_init__(self):
-        # Initialize all the arrays with NaN values
-        self.SnowMelt = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SnowWaterEq = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SnowfallWaterEq = np.full(self.outdim, np.nan, dtype=np.float32)  # Snowfall equivalent
-        self.SnowDepth = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SnowDensity = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Sublimation = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Condensation = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SnowTemp = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.MeltEnergy = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Energy = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Albedo = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SnowYN = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.RaininSnow = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Runoff = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.RefrozenWater = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.PackWater = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.LW_down = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.LW_up = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SW_down = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.SW_up = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Q_latent = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Q_sensible = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.Q_precip = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.PackCC = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.CCenergy = np.full(self.outdim, np.nan, dtype=np.float32)
-        self.CCsnowfall = np.full(self.outdim, np.nan, dtype=np.float32)
+    def __init__(self, outdim):
+        self.SnowMelt = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowWaterEq = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowfallWaterEq = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowDepth = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowDensity = np.full(outdim, np.nan, dtype=np.float32)
+        self.Sublimation = np.full(outdim, np.nan, dtype=np.float32)
+        self.Condensation = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowTemp = np.full(outdim, np.nan, dtype=np.float32)
+        self.MeltEnergy = np.full(outdim, np.nan, dtype=np.float32)
+        self.Energy = np.full(outdim, np.nan, dtype=np.float32)
+        self.Albedo = np.full(outdim, np.nan, dtype=np.float32)
+        self.ExistSnow = np.full(outdim, np.nan, dtype=np.float32)
+        self.RaininSnow = np.full(outdim, np.nan, dtype=np.float32)
+        self.Runoff = np.full(outdim, np.nan, dtype=np.float32)
+        self.RefrozenWater = np.full(outdim, np.nan, dtype=np.float32)
+        self.PackWater = np.full(outdim, np.nan, dtype=np.float32)
+        self.LW_down = np.full(outdim, np.nan, dtype=np.float32)
+        self.LW_up = np.full(outdim, np.nan, dtype=np.float32)
+        self.SW_down = np.full(outdim, np.nan, dtype=np.float32)
+        self.SW_up = np.full(outdim, np.nan, dtype=np.float32)
+        self.Q_latent = np.full(outdim, np.nan, dtype=np.float32)
+        self.Q_sensible = np.full(outdim, np.nan, dtype=np.float32)
+        self.Q_precip = np.full(outdim, np.nan, dtype=np.float32)
+        self.PackCC = np.full(outdim, np.nan, dtype=np.float32)
+        self.CCenergy = np.full(outdim, np.nan, dtype=np.float32)
+        self.CCsnowfall = np.full(outdim, np.nan, dtype=np.float32)
