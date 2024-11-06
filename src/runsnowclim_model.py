@@ -122,7 +122,7 @@ def run_model(forcings_path, parameters_path, outputs_path):
     print('Files loaded, running the model...')
     model_output = run_snowclim_model(forcings_data, parameters)
     
-    _save_outputs(model_output, outputs_path)
+    #_save_outputs(model_output, outputs_path)
 
     return model_output
     

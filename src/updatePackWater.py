@@ -13,12 +13,12 @@ References:
 
 import numpy as np
 
-def update_pack_water(a, lastpackwater, lastsnowdepth, lw_max, runoff, sec_in_ts):
+def update_pack_water(exist_snow, lastpackwater, lastsnowdepth, lw_max, runoff, sec_in_ts):
     """
     Update snowpack liquid water content based on thresholds for irreducible and maximum water.
     
     Parameters:
-    a (numpy.ndarray): Active snowpack mask.
+    exist_snow (numpy.ndarray): Active snowpack mask.
     lastpackwater (numpy.ndarray): Previous timestep snowpack liquid water.
     lastsnowdepth (numpy.ndarray): Previous timestep snow depth.
     lw_max (float): Maximum liquid water content as fraction of snow depth.
@@ -34,7 +34,8 @@ def update_pack_water(a, lastpackwater, lastsnowdepth, lw_max, runoff, sec_in_ts
     max_water = lw_max * lastsnowdepth
 
     # Gravity drainage if water content is between min and max water
-    b = np.logical_and(a, np.logical_and(lastpackwater > min_water, lastpackwater <= max_water))
+    b = np.logical_and(exist_snow, np.logical_and(lastpackwater > min_water, 
+                                                  lastpackwater <= max_water))
     
     if np.any(b):
         waterrate = np.full_like(lastpackwater[b], 2.7778e-05)  # Drainage rate (10 cm/hr converted to m/s)
@@ -45,8 +46,9 @@ def update_pack_water(a, lastpackwater, lastsnowdepth, lw_max, runoff, sec_in_ts
         runoff[b] += waterdrainage
         lastpackwater[b] -= waterdrainage
     
-        # Drain all excess water if packwater exceeds max_water
-        b = np.logical_and(a, lastpackwater > max_water)
+    # Drain all excess water if packwater exceeds max_water
+    b = np.logical_and(exist_snow, lastpackwater > max_water)
+    if np.any(b):
         runoff[b] += (lastpackwater[b] - max_water[b])
         lastpackwater[b] = max_water[b]
 

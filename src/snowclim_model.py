@@ -69,7 +69,6 @@ def _perform_precipitation_operations(forcings_data, parameters):
     - newsnowdensity: np.ndarray
         Fresh snow density based on the average temperature.
     """
-
     # Calculate phase (snow or rain fraction)
     passnow = calc_phase(forcings_data['tavg'], forcings_data['relhum'])
 
@@ -88,7 +87,7 @@ def _perform_precipitation_operations(forcings_data, parameters):
     return rainfall, SnowfallWaterEq, newsnowdensity
 
 
-def initialize_snowpack_variables(n_lat, parameters):
+def _initialize_snowpack_variables(n_lat, parameters):
     """
     Initialize variables related to snowpack and albedo.
 
@@ -125,6 +124,153 @@ def initialize_snowpack_variables(n_lat, parameters):
     return (lastalbedo, lastswe, lastsnowdepth, packsnowdensity, lastpackcc, lastpackwater)
 
 
+def _process_forcings_and_energy(index, forcings_data, parameters, 
+                                 snow_model_instances):
+    """
+    Processes input forcings and smooths energy calculations.
+    
+    Parameters:
+    - index: int, index of the current timestep.
+    - forcings_data: dict, containing forcings data for the model.
+    - parameters: dict, containing model parameters.
+    - snow_model_instances: list, previous instances of SnowModelVariables containing energy data.
+
+    Returns:
+    - input_forcings: dict, forcings data for the current timestep.
+    - snow_vars: SnowModelVariables, initialized snow model variables for current timestep.
+    - smoothed_energy: ndarray, energy values smoothed over specified hours.
+    """
+
+    # Extract current timestep forcings
+    input_forcings = {key: value[index, :] for key, value in forcings_data['forcings'].items()}
+
+    # Initialize snow model variables for this timestep
+    size_lat = forcings_data['coords']['lat'].size
+    snow_vars = SnowModelVariables(size_lat)
+
+    # Smooth energy values if enough timesteps have passed
+    smoothed_energy = None
+    if index > parameters['smooth_hr']:
+        smoothed_energy = np.full((parameters['smooth_hr'], size_lat), np.nan)
+        for l in range(parameters['smooth_hr']):
+            smoothed_energy[l, :] = np.maximum(1, snow_model_instances[index - l - 1].Energy)
+
+    return input_forcings, snow_vars, smoothed_energy
+
+
+def _calculate_snow_temp_and_cold_content(newswe, input_forcings, lastpackcc, 
+                                          lastswe, lastpacktemp):
+    """
+    Calculates snow temperature and cold content and updates pack conditions.
+    
+    Parameters:
+    - newswe: ndarray, snow water equivalent for the current timestep.
+    - input_forcings: dict, containing current timestep forcings such as temperature.
+    - lastpackcc: ndarray, previous timestep's cold content.
+    - lastswe: ndarray, previous timestep's snow water equivalent.
+    - lastpacktemp: ndarray, temperature of the last snow pack.
+
+    Returns:
+    - snowfallcc: ndarray, with the snowlfall cold content.
+    - lastpacktemp: ndarray, updated temperature for last pack.
+    """
+    has_new_snow = newswe > 0
+
+    # Update new snow temperature where there is new snow
+    newsnowtemp = np.where(has_new_snow, np.minimum(0, input_forcings['tdmean']), 0)
+
+    # Calculate the cold content of the snowfall
+    snowfallcc = const.WATERDENS * const.CI * newswe * newsnowtemp
+    updated_lastpackcc = lastpackcc + snowfallcc
+
+    # Update last pack temperature where there is snowfall
+    if np.any(has_new_snow):
+        lastpacktemp[has_new_snow] = updated_lastpackcc[has_new_snow] / \
+            (const.WATERDENS * const.CI * (lastswe[has_new_snow] + newswe[has_new_snow]))
+
+    return snowfallcc, lastpacktemp
+
+
+def _calculate_energy_fluxes(exist_snow, parameters, input_forcings, lastsnowtemp, newrain, 
+                            lastalbedo, sec_in_ts):
+    """
+    Calculate energy fluxes at each timestep, including turbulent, rain, solar, longwave, and ground heat fluxes.
+
+    Parameters:
+    - exist_snow: Boolean array, indicating locations with existing snow.
+    - parameters: dict, contains model parameters like 'G' and 'snow_emis'.
+    - input_forcings: dict, contains the forcing data for this timestep.
+    - lastsnowtemp: ndarray, surface temperature of the last snowpack.
+    - newrain: ndarray, rainfall over snowpack.
+    - lastalbedo: ndarray, albedo values from the previous timestep.
+    - sec_in_ts: float, number of seconds in each timestep.
+
+    Returns:
+    - lastenergy: ndarray, net downward energy flux into the snow surface.
+    """
+    var_list = ['Q_sensible', 'E', 'Q_latent', 'Q_precip', 'SW_up', 'SW_down', 'LW_down', 
+                'LW_up']
+    energy_var = {name: np.zeros(len(exist_snow), dtype=np.float32) for name in var_list}
+
+    # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---    
+    has_snow_and_wind = exist_snow & (input_forcings['vs'] > 0)
+    H, E, EV = calc_turbulent_fluxes(
+        parameters, input_forcings['vs'][has_snow_and_wind], lastsnowtemp[has_snow_and_wind],
+        input_forcings['tavg'][has_snow_and_wind], input_forcings['psfc'][has_snow_and_wind],
+        input_forcings['huss'][has_snow_and_wind], sec_in_ts
+    )
+    energy_var['Q_sensible'][has_snow_and_wind] = H
+    energy_var['E'][has_snow_and_wind] = E
+    energy_var['Q_latent'][has_snow_and_wind] = E
+
+    # --- Rain heat flux into snowpack (kJ/m2/timestep) ---
+    energy_var['Q_precip'][exist_snow] = const.CW * const.WATERDENS * np.maximum(0, input_forcings['tdmean'][exist_snow]) * newrain[exist_snow]
+
+    # --- Net downward solar flux at surface (kJ/m2/timestep) ---
+    energy_var['SW_up'][exist_snow] = input_forcings['solar'][exist_snow] * lastalbedo[exist_snow]
+    energy_var['SW_down'][exist_snow] = input_forcings['solar'][exist_snow]
+
+    # --- Longwave flux up from snow surface (kJ/m2/timestep) ---
+    energy_var['LW_down'][exist_snow] = input_forcings['lrad'][exist_snow]
+    energy_var['LW_up'][exist_snow] = calc_longwave(
+        parameters['snow_emis'], lastsnowtemp[exist_snow], 
+        input_forcings['lrad'][exist_snow], sec_in_ts)
+
+    # --- Ground heat flux (kJ/m2/timestep) ---
+    energy_var['Gf'] = np.where(exist_snow, parameters['G'] * sec_in_ts, 0)
+
+    return energy_var
+
+
+def _apply_cold_content_tax(lastpackcc, parameters, previous_energy, lastenergy):
+    """
+    Apply cold content tax to the energy flux based on temperature parameters.
+    
+    Parameters:
+    - lastpackcc (np.ndarray): The current cold content in the snowpack.
+    - parameters (dict): Dictionary containing temperature and tax parameters, 
+                         including 'Tstart', 'Tadd', and 'maxtax'.
+    - previous_energy (np.ndarray): The smoothed energy values.
+
+    Returns:
+    - np.ndarray: Updated energy values with the cold content tax applied.
+    """
+    # Calculate the tax based on the cold content
+    tax = (lastpackcc - parameters['Tstart']) / parameters['Tadd'] * parameters['maxtax']
+    # Limit tax to be within 0 and maxtax
+    tax = np.clip(tax, 0, parameters['maxtax'])
+
+    # Copy smoothed energy for modification
+    previous_energy[parameters['smooth_hr']-1,:] = lastenergy
+    smoothed_energy = np.nanmean(previous_energy, axis=0)
+    # Apply tax where energy is negative
+    negative_energy = smoothed_energy < 0
+    if np.any(negative_energy):
+        smoothed_energy[negative_energy] *= (1 - tax[negative_energy])
+
+    return smoothed_energy
+
+
 def run_snowclim_model(forcings_data, parameters):
     """
     Simulates snow accumulation, melting, sublimation, condensation, and energy balance
@@ -137,165 +283,99 @@ def run_snowclim_model(forcings_data, parameters):
     Returns:
         model_vars (SnowModelVariables class):
     """
-    model_vars = SnowModelVariables(forcings_data['forcings']['ppt'].shape)
-
     # number of seconds in each time step
     sec_in_ts = parameters['hours_in_ts'] * const.MIN_2_SECS
-    rainfall, SnowfallWaterEq, newsnowdensity = _perform_precipitation_operations(
-        forcings_data['forcings'], parameters)
 
     coords = forcings_data['coords']
     size_lat = coords['lat'].size
-    
+    snow_model_instances = [None] * len(forcings_data['coords']['time'])
+
     # --- For each time step ---
     for i, time_value in enumerate(forcings_data['coords']['time']):
-        input_forcings = {key: value[i, :] for key, value in forcings_data['forcings'].items()}
+        # loading necessary data to run the model
+        input_forcings, snow_vars, previous_energy = _process_forcings_and_energy(
+            i, forcings_data, parameters, snow_model_instances)
+
+        # Calculate new precipitation components
+        newrain, newswe, newsnowdens = _perform_precipitation_operations(input_forcings, parameters)
+        newsnowdepth = newswe * const.WATERDENS / newsnowdens
 
         # Reset to 0 snow at the specified time of year
         if i == 0 or (time_value[1] == parameters['snowoff_month'] and time_value[2] == parameters['snowoff_day']):
             (lastalbedo, lastswe, lastsnowdepth, packsnowdensity, lastpackcc,
-             lastpackwater) = initialize_snowpack_variables(size_lat,
-                                                            parameters)
+             lastpackwater) = _initialize_snowpack_variables(size_lat, parameters)
             lastpacktemp = np.zeros(size_lat, dtype=np.float32)
             snowage = np.zeros(size_lat, dtype=np.float32)
-
-        # --- new mass inputs ---
-        newswe = SnowfallWaterEq[i, :]
-        newrain = rainfall[i, :]
-        newsnowdepth = SnowfallWaterEq[i, :] * const.WATERDENS / newsnowdensity[i, :]
-        newsnowdens = newsnowdensity[i, :]
-
-        # --- Calculate snow temperature and cold contents ---
-        has_new_snow = newswe > 0
-
-        # Update new snow temperature where newswe > 0
-        newsnowtemp = np.where(has_new_snow, np.minimum(0, input_forcings['tdmean']), 0)
-
-        # Calculate cold content of snowfall
-        snowfallcc = const.WATERDENS * const.CI * newswe * newsnowtemp
+        
+        snowfallcc, lastpacktemp = _calculate_snow_temp_and_cold_content(
+            newswe, input_forcings, lastpackcc, lastswe, lastpacktemp)
         lastpackcc += snowfallcc
-
-        # Store snowfall cold content for this timestep
-        model_vars.CCsnowfall[i, :] = snowfallcc
-
-        # Update last pack temperature where there's snowfall
-        if np.any(has_new_snow):
-            lastpacktemp[has_new_snow] = lastpackcc[has_new_snow] / \
-                (const.WATERDENS * const.CI *
-                 (lastswe[has_new_snow] + newswe[has_new_snow]))
+        snow_vars.CCsnowfall = snowfallcc.copy()
 
         # If there is snow on the ground, run the model
         exist_snow = (newswe + lastswe) > 0
         if np.sum(exist_snow) > 0:
-            model_vars.SnowYN[i, :] = exist_snow
+            snow_vars.ExistSnow = exist_snow.copy()
 
             # --- Set snow surface temperature ---
             lastsnowtemp = np.minimum(input_forcings['tdmean'] + parameters['Ts_add'], 0)
-            model_vars.SnowTemp[i, exist_snow] = lastsnowtemp[exist_snow]
+            snow_vars.SnowTemp[exist_snow] = lastsnowtemp[exist_snow].copy()
 
             # --- Update snowpack after new snowfall ---
-            packsnowdensity[exist_snow] = calc_snow_density_after_snow(lastswe[exist_snow],
-                                                                       newswe[exist_snow],
-                                                                       packsnowdensity[exist_snow],
-                                                                       newsnowdens[exist_snow])
+            packsnowdensity[exist_snow] = calc_snow_density_after_snow(
+                lastswe[exist_snow], newswe[exist_snow], packsnowdensity[exist_snow],
+                newsnowdens[exist_snow])
+            
             lastswe += newswe
             lastsnowdepth += newsnowdepth
 
             # --- Calculate pack density after compaction ---
-            packsnowdensity[exist_snow] = calc_snow_density(lastswe[exist_snow],
-                                                            lastpacktemp[exist_snow],
-                                                            packsnowdensity[exist_snow],
-                                                            sec_in_ts)
+            packsnowdensity[exist_snow] = calc_snow_density(
+                lastswe[exist_snow], lastpacktemp[exist_snow], packsnowdensity[exist_snow],
+                sec_in_ts)
             lastsnowdepth[exist_snow] = lastswe[exist_snow] * \
                 const.WATERDENS / packsnowdensity[exist_snow]
 
             # --- Update snowpack liquid water content ---
             previouspackwater = lastpackwater[exist_snow]
             lastpackwater[exist_snow] += newrain[exist_snow]
-            model_vars.Runoff[i, :], lastpackwater = update_pack_water(exist_snow,
-                                                                       lastpackwater,
-                                                                       lastsnowdepth,
-                                                                       parameters['lw_max'],
-                                                                       model_vars.Runoff[i, :],
-                                                                       sec_in_ts)
-            model_vars.RaininSnow[i, exist_snow] = np.maximum(
+            snow_vars.Runoff, lastpackwater = update_pack_water(
+                exist_snow, lastpackwater, lastsnowdepth, parameters['lw_max'],
+                snow_vars.Runoff, sec_in_ts)
+            snow_vars.RaininSnow[exist_snow] = np.maximum(
                 lastpackwater[exist_snow] - previouspackwater, 0)
 
             # --- Calculate albedo ---
-            lastalbedo, snowage = calc_albedo(parameters,
-                                              lastalbedo,
-                                              newsnowdepth,
-                                              lastsnowdepth,
-                                              newswe,
-                                              lastswe,
-                                              lastsnowtemp,
-                                              coords['lat'].ravel(),
-                                              time_value[1],
-                                              time_value[2],
-                                              snowage,
-                                              lastpackcc,
-                                              sec_in_ts)
-            model_vars.Albedo[i, exist_snow] = lastalbedo[exist_snow]
+            lastalbedo, snowage = calc_albedo(
+                parameters, lastalbedo, newsnowdepth, lastsnowdepth, newswe, lastswe,
+                lastsnowtemp, coords['lat'].ravel(), time_value[1], time_value[2],
+                snowage, lastpackcc, sec_in_ts)
+            snow_vars.Albedo[exist_snow] = lastalbedo[exist_snow].copy()
 
-            # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---
-            H = np.zeros(size_lat, dtype=np.float32)
-            E = np.zeros(size_lat, dtype=np.float32)
-            EV = np.zeros(size_lat, dtype=np.float32)
-            has_snow_and_wind = exist_snow & (input_forcings['vs'] > 0)
-            H[has_snow_and_wind], E[has_snow_and_wind], EV[has_snow_and_wind] = calc_turbulent_fluxes(
-                parameters,
-                input_forcings['vs'][has_snow_and_wind],
-                lastsnowtemp[has_snow_and_wind],
-                input_forcings['tavg'][has_snow_and_wind],
-                input_forcings['psfc'][has_snow_and_wind],
-                input_forcings['huss'][has_snow_and_wind],
-                sec_in_ts)
-
-            # --- Rain heat flux into snowpack (kJ/m2/timestep) ---
-            P = np.zeros(lastsnowtemp.size, dtype=np.float32)
-            P[exist_snow] = const.CW * const.WATERDENS * \
-                np.maximum(0, input_forcings['tdmean'][exist_snow]) * newrain[exist_snow]
-            model_vars.Q_precip[i, :] = P
-
-            # --- Net downward solar flux at surface (kJ/m2/timestep) ---
-            Sup = np.zeros(size_lat, dtype=np.float32)
-            Sup[exist_snow] = input_forcings['solar'][exist_snow] * lastalbedo[exist_snow]
-            Sdn = np.zeros(size_lat, dtype=np.float32)
-            Sdn[exist_snow] = input_forcings['solar'][exist_snow]
-
-            # --- Longwave flux up from snow surface (kJ/m2/timestep) ---
-            Ldn = np.zeros(size_lat, dtype=np.float32)
-            Ldn[exist_snow] = input_forcings['lrad'][exist_snow]
-            Lt = np.zeros(size_lat, dtype=np.float32)
-            Lt[exist_snow] = calc_longwave(parameters['snow_emis'],
-                                           lastsnowtemp[exist_snow],
-                                           input_forcings['lrad'][exist_snow],
-                                           sec_in_ts)
-
-            # --- Ground heat flux (kJ/m2/timestep) ---
-            Gf = np.where(exist_snow, parameters['G'] * sec_in_ts, 0)
-
+            energy_var = _calculate_energy_fluxes(exist_snow, parameters, input_forcings,
+                                                    lastsnowtemp, newrain, lastalbedo, 
+                                                    sec_in_ts)
+            
             # --- Downward net energy flux into snow surface (kJ/m2/timestep) ---
-            lastenergy = Sdn - Sup + Ldn - Lt + H + EV + Gf + P
-            model_vars.Energy[i, :] = lastenergy
+            lastenergy = energy_var['SW_down'] - energy_var['SW_up']  
+            lastenergy += energy_var['LW_down'] - energy_var['LW_up'] 
+            lastenergy += energy_var['Q_sensible'] + energy_var['Q_latent']  
+            lastenergy += energy_var['Gf'] + energy_var['Q_precip']
+            snow_vars.Energy = lastenergy.copy()
 
-            # --- Apply cold content tax ---
-            lastenergy = np.nanmean(model_vars.Energy[max(
-                1, (i - parameters['smooth_hr'] + 1)):i + 1, :], axis=0)
-            tax = (lastpackcc - parameters['Tstart']) / \
-                parameters['Tadd'] * parameters['maxtax']
-            # limit tax to be >= 0 and <= maxtax
-            tax = np.clip(tax, 0, parameters['maxtax'])
-            n = lastenergy < 0
-            if np.any(n):
-                lastenergy[n] *= (1 - tax[n])
+            # copying values from the dict to the object
+            for key, value in energy_var.items():
+                if hasattr(snow_vars, key):
+                    setattr(snow_vars, key, value)
+
+            taxed_last_energy = _apply_cold_content_tax(
+                lastpackcc, parameters, previous_energy, lastenergy)         
 
             # --- Distribute energy ---
-
             # 1. Energy goes to cold content first
-            lastpackcc, lastenergy, model_vars.CCenergy[i, :] = calc_energy_to_cc(lastpackcc,
-                                                                                  lastenergy,
-                                                                                  model_vars.CCenergy[i, :])
+            lastpackcc, taxed_last_energy, snow_vars.CCenergy = calc_energy_to_cc(
+                lastpackcc, taxed_last_energy, snow_vars.CCenergy)
+            
             b = lastswe > 0
             if np.any(b):
                 lastpacktemp[b] = lastpackcc[b] / \
@@ -309,47 +389,29 @@ def run_snowclim_model(forcings_data, parameters):
             lastpackcc[f] = const.WATERDENS * const.CI * lastswe[f] * lastpacktemp[f]
 
             # 2. Energy goes to refreezing second
-            lastpackwater, lastswe, lastpackcc, packsnowdensity, model_vars.RefrozenWater[i, :] = calc_energy_to_refreezing(lastpackwater,
-                                                                                                                            lastswe,
-                                                                                                                            lastpackcc,
-                                                                                                                            lastsnowdepth,
-                                                                                                                            model_vars.RefrozenWater[
-                                                                                                                                i, :],
-                                                                                                                            packsnowdensity)
+            lastpackwater, lastswe, lastpackcc, packsnowdensity, snow_vars.RefrozenWater = calc_energy_to_refreezing(
+                lastpackwater, lastswe, lastpackcc, lastsnowdepth, snow_vars.RefrozenWater, packsnowdensity)
 
             # 3. Energy goes to melt third
-            model_vars.SnowMelt[i, :], model_vars.MeltEnergy[i, :], lastpackwater, lastswe, lastsnowdepth = calc_energy_to_melt(lastswe,
-                                                                                                                                lastsnowdepth,
-                                                                                                                                packsnowdensity,
-                                                                                                                                lastenergy,
-                                                                                                                                lastpackwater,
-                                                                                                                                model_vars.SnowMelt[
-                                                                                                                                    i, :],
-                                                                                                                                model_vars.MeltEnergy[i, :])
+            snow_vars.SnowMelt, snow_vars.MeltEnergy, lastpackwater, lastswe, lastsnowdepth = calc_energy_to_melt(
+                lastswe, lastsnowdepth, packsnowdensity, taxed_last_energy, lastpackwater, 
+                snow_vars.SnowMelt, snow_vars.MeltEnergy)
 
             # Update water in snowpack
-            model_vars.Runoff[i, :], lastpackwater = update_pack_water(exist_snow,
-                                                                       lastpackwater,
-                                                                       lastsnowdepth,
-                                                                       parameters['lw_max'],
-                                                                       model_vars.Runoff[i, :],
-                                                                       sec_in_ts)
-            model_vars.PackWater[i, :] = lastpackwater
+            snow_vars.Runoff, lastpackwater = update_pack_water(
+                exist_snow, lastpackwater, lastsnowdepth, parameters['lw_max'],
+                snow_vars.Runoff, sec_in_ts)
+            snow_vars.PackWater = lastpackwater.copy()
 
             # --- Sublimation ---
             a = lastsnowdepth > 0
             if np.any(a):
-                model_vars.Sublimation[i, a], model_vars.Condensation[i, a], lastswe[a], lastsnowdepth[a], lastpackcc[a], packsnowdensity[a], \
-                    lastpackwater[a] = calc_sublimation(E[a],
-                                                        lastswe[a],
-                                                        lastsnowdepth[a],
-                                                        packsnowdensity[a],
-                                                        lastsnowtemp[a],
-                                                        lastpackcc[a],
-                                                        parameters['snow_dens_default'],
-                                                        model_vars.Sublimation[i, a],
-                                                        model_vars.Condensation[i, a],
-                                                        lastpackwater[a])
+                snow_vars.Sublimation[a], snow_vars.Condensation[a], lastswe[a], lastsnowdepth[a], lastpackcc[a], packsnowdensity[a], \
+                    lastpackwater[a] = calc_sublimation(
+                        energy_var['E'][a], lastswe[a], lastsnowdepth[a], packsnowdensity[a],
+                        lastsnowtemp[a], lastpackcc[a], parameters['snow_dens_default'],
+                        snow_vars.Sublimation[a], snow_vars.Condensation[a],
+                        lastpackwater[a])
 
             # Update snow
             b = lastswe > 0
@@ -370,25 +432,18 @@ def run_snowclim_model(forcings_data, parameters):
             lastpackcc[f] = const.WATERDENS * const.CI * lastswe[f] * lastpacktemp[f]
 
             # Update outputs
-            model_vars.PackCC[i, :] = lastpackcc
-            model_vars.SnowDepth[i, :] = lastsnowdepth
-            model_vars.SnowWaterEq[i, :] = lastswe
+            snow_vars.PackCC = lastpackcc.copy()
+            snow_vars.SnowDepth = lastsnowdepth.copy()
+            snow_vars.SnowWaterEq = lastswe.copy()
             b = lastswe > 0
             if np.any(b):
-                model_vars.SnowDensity[i, b] = packsnowdensity[b]
+                snow_vars.SnowDensity[b] = packsnowdensity[b]
 
-            model_vars.SW_down[i, :] = Sdn
-            model_vars.SW_up[i, :] = Sup
-            model_vars.LW_down[i, :] = Ldn
-            model_vars.LW_up[i, :] = Lt
-            model_vars.Q_latent[i, :] = EV
-            model_vars.Q_sensible[i, :] = H
         else:
             # Initialize arrays with default values
             (lastalbedo, lastswe, lastsnowdepth, packsnowdensity, lastpackcc,
-             lastpackwater) = initialize_snowpack_variables(size_lat, parameters)
+             lastpackwater) = _initialize_snowpack_variables(size_lat, parameters)
+            
+        snow_model_instances[i] = _prepare_outputs(snow_vars, newswe)
 
-    # --- Prepare outputs ---
-    model_vars = _prepare_outputs(model_vars, SnowfallWaterEq)
-
-    return model_vars
+    return snow_model_instances

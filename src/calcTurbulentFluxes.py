@@ -9,7 +9,7 @@ from calcLatHeatSub import calculate_lat_heat_sub
 import constants as const
 
 
-def calc_turbulent_fluxes(parameters, vs, lastsnowtemp, tavg,
+def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
                           psfc, huss, sec_in_ts):
     """
     Calculate turbulent fluxes of heat and mass (evaporation/sublimation) using
@@ -17,7 +17,7 @@ def calc_turbulent_fluxes(parameters, vs, lastsnowtemp, tavg,
 
     Parameters:
     parameters: dictionary with the parameters to be used.
-    vs: Wind speed (m/s)
+    wind_speed: Wind speed (m/s)
     lastsnowtemp: Snow surface temperature (C)
     tavg: Air temperature (C)
     psfc: Surface pressure (hPa)
@@ -53,7 +53,7 @@ def calc_turbulent_fluxes(parameters, vs, lastsnowtemp, tavg,
     if parameters['stability']:
         # Calculate the bulk Richardson number
         Rib = (g * parameters['windHt'] * (tavg - lastsnowtemp)) / \
-            ((tavg + const.K_2_C) * vs**2)
+            ((tavg + const.K_2_C) * wind_speed**2)
 
         # Calculate FH as a function of Rib
         FH = np.full_like(tavg, np.nan)
@@ -75,20 +75,20 @@ def calc_turbulent_fluxes(parameters, vs, lastsnowtemp, tavg,
     LatHeatSub = calculate_lat_heat_sub(lastsnowtemp)  # kJ/kg
 
     # Windless exchange coefficient
-    Ex = np.zeros_like(vs)
+    Ex = np.zeros_like(wind_speed)
     if parameters['E0_stable'] == 1:
         Ex = E0
     elif parameters['E0_stable'] == 2:
         Ex[Rib > 0] = E0
 
     # Sensible heat flux (H)
-    H = -(pa * const.CA * CH * vs + Ex) * (lastsnowtemp - tavg)
+    H = -(pa * const.CA * CH * wind_speed + Ex) * (lastsnowtemp - tavg)
 
     # Latent heat flux (E)
     if parameters['E0_app'] == 1:
-        E = -(pa * CH * vs) * (rhos - rhoa)  # Mass flux kg/m2/s
+        E = -(pa * CH * wind_speed) * (rhos - rhoa)  # Mass flux kg/m2/s
     elif ['E0_app'] == 2:
-        E = -(pa * CH * vs + Ex) * (rhos - rhoa)  # Mass flux kg/m2/s
+        E = -(pa * CH * wind_speed + Ex) * (rhos - rhoa)  # Mass flux kg/m2/s
 
     # Evaporation and sublimation energy flux (EV)
     Evap = E * LatHeatVap
@@ -101,8 +101,8 @@ def calc_turbulent_fluxes(parameters, vs, lastsnowtemp, tavg,
     EV *= sec_in_ts  # kJ/m2/s
 
     # Avoid NaNs for zero wind speed
-    H[vs == 0] = 0
-    E[vs == 0] = 0
-    EV[vs == 0] = 0
+    H[wind_speed == 0] = 0
+    E[wind_speed == 0] = 0
+    EV[wind_speed == 0] = 0
 
     return H, E, EV
