@@ -171,8 +171,8 @@ def _calculate_snow_temp_and_cold_content(newswe, input_forcings, lastpackcc,
     - lastpacktemp: ndarray, temperature of the last snow pack.
 
     Returns:
-    - updated_lastpackcc: ndarray, updated cold content for last pack.
-    - updated_lastpacktemp: ndarray, updated temperature for last pack.
+    - snowfallcc: ndarray, with the snowlfall cold content.
+    - lastpacktemp: ndarray, updated temperature for last pack.
     """
     has_new_snow = newswe > 0
 

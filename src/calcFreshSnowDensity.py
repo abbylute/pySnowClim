@@ -23,8 +23,7 @@ def calc_fresh_snow_density(airtemp):
     pmin = 50    # kg/m^3, minimum snow density
     
     # Ensure air temperatures do not fall below -ef to avoid imaginary numbers
-    airtemp_cap = airtemp
-    airtemp_cap[airtemp_cap < -ef] = ef
+    airtemp_cap = np.maximum(airtemp, -ef)
     
     # Calculate fresh snow density
     newsnowdensity = pmin + np.maximum(df * (airtemp_cap + ef) ** (3/2), 0)
