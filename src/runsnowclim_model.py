@@ -104,11 +104,15 @@ def _save_outputs(model_output, outputs_path=None):
     if outputs_path is not None:
     # TODO: here or perhaps before the model runs, add a check that the output directory exists
     # TODO: for now, saving these as .npy because it is easy and avoids added complications. 
-    #       May want to save in a more accessible format eventually.
-        variables_to_save = list(vars(model_output).keys())
-        variables_to_save.remove('outdim')
+    #       May want to save as netcdf eventually.
+        n_locations = model_output[0].SnowWaterEq.shape[0]
+        variables_to_save = [x for x in dir(model_output[0]) if not x.startswith('__')]
         for v in variables_to_save:
-            np.save(outputs_path + v + '.npy', getattr(model_output,v))
+            var_data = np.empty((len(model_output),n_locations))
+            for t in range(len(model_output)):
+                var_data[t,:] = getattr(model_output[t],v)
+            np.save(outputs_path + v + '.npy', var_data)
+
 
 
 def run_model(forcings_path, parameters_path, outputs_path):
@@ -121,8 +125,7 @@ def run_model(forcings_path, parameters_path, outputs_path):
     
     print('Files loaded, running the model...')
     model_output = run_snowclim_model(forcings_data, parameters)
-    
-    #_save_outputs(model_output, outputs_path)
+    _save_outputs(model_output, outputs_path)
 
     return model_output
     
