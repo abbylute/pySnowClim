@@ -9,8 +9,7 @@ class PrecipitationProperties:
 
     Attributes:
         rain (np.ndarray): Rainfall in mm for the given timestep.
-        swe (np.ndarray): Snow water equivalent in mm, representing the liquid
-                          amount in the snow.
+        sfe (np.ndarray): Snowfall water equivalent in mm.
         snowdens (np.ndarray): Density of the freshly fallen snow in kg/m^3.
         snowdepth (np.ndarray): Calculated depth of snow based on SWE and snow density.
 
@@ -19,26 +18,26 @@ class PrecipitationProperties:
                                             snow density with a water density constant.
     """
 
-    def __init__(self, rain, swe, snowdens, water_density):
+    def __init__(self, rain, sfe, snowdens, water_density):
         """
         Initializes the PrecipitationProperties class with rainfall, SWE, and snow density
         values, and computes the snow depth.
 
         Args:
             rain (np.ndarray): Rainfall amount (mm).
-            swe (np.ndarray): Snow water equivalent (mm).
+            sfe (np.ndarray): snowfall water equivalent (mm).
             snowdens (np.ndarray): Density of the fresh snow (kg/m^3).
             water_density (float): Constant representing water density (kg/m^3),
                                    typically 1000 for fresh water.
         """
         self.rain = rain
-        self.swe = swe
+        self.sfe = sfe
         self.snowdens = snowdens
         self.snowdepth = self._calculate_snowdepth(water_density)
 
     def _calculate_snowdepth(self, water_density):
         """
-        Calculates snow depth based on SWE and snow density.
+        Calculates snow depth based on SFE and snow density.
 
         Args:
             water_density (float): The density of water (kg/m^3).
@@ -46,4 +45,4 @@ class PrecipitationProperties:
         Returns:
             np.ndarray: Calculated snow depth in meters.
         """
-        return self.swe * water_density / self.snowdens
+        return self.sfe * water_density / self.snowdens

@@ -36,7 +36,7 @@ def _prepare_outputs(model_vars, precip):
     """
     # Scale model variables by WATERDENS or other units where applicable
     model_vars.SnowWaterEq *= const.WATERDENS
-    model_vars.SnowfallWaterEq = precip.swe * const.WATERDENS
+    model_vars.SnowfallWaterEq = precip.sfe * const.WATERDENS
     model_vars.SnowMelt *= const.WATERDENS
     model_vars.Sublimation *= const.WATERDENS
     model_vars.Condensation *= const.WATERDENS
@@ -150,12 +150,16 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
     size_lat = forcings_data['coords']['lat'].size
     snow_vars = SnowModelVariables(size_lat)
 
-    # Smooth energy values if enough timesteps have passed
-    smoothed_energy = None
-    if index > parameters['smooth_hr']:
-        smoothed_energy = np.full((parameters['smooth_hr'], size_lat), np.nan)
-        for l in range(parameters['smooth_hr']):
-            smoothed_energy[l, :] = np.maximum(1, snow_model_instances[index - l - 1].Energy)
+    # The max 2 here is to guarantee the average will be taken without errors in the 
+    # _apply_cold_content function.
+    smoothed_energy = np.full((max(2,parameters['smooth_time_steps']), size_lat), np.nan)
+    if index > parameters['smooth_time_steps']:        
+        for l in range(parameters['smooth_time_steps']-1):
+            smoothed_energy[l, :] = snow_model_instances[index -l -1].Energy
+    else:
+        if index > 0:
+            for l in range(index):
+                smoothed_energy[l, :] = snow_model_instances[l].Energy
 
     return input_forcings, snow_vars, smoothed_energy
 
@@ -263,8 +267,12 @@ def _apply_cold_content_tax(lastpackcc, parameters, previous_energy, lastenergy)
     tax = np.clip(tax, 0, parameters['maxtax'])
 
     # Copy smoothed energy for modification
-    previous_energy[parameters['smooth_hr']-1,:] = lastenergy
-    smoothed_energy = np.nanmean(previous_energy, axis=0)
+    if parameters['smooth_time_steps'] > 1:
+        previous_energy[-1,:] = lastenergy
+        smoothed_energy = np.nanmean(previous_energy, axis=0)
+    else:
+        smoothed_energy = lastenergy
+        
     # Apply tax where energy is negative
     negative_energy = smoothed_energy < 0
     if np.any(negative_energy):
@@ -310,11 +318,11 @@ def _update_snowpack_state(
 
     # Update snowpack after new snowfall
     packsnowdensity[exists_snow] = calc_snow_density_after_snow(
-        lastswe[exists_snow], precip.swe[exists_snow], packsnowdensity[exists_snow],
+        lastswe[exists_snow], precip.sfe[exists_snow], packsnowdensity[exists_snow],
         precip.snowdens[exists_snow]
     )
     
-    lastswe += precip.swe
+    lastswe += precip.sfe
     lastsnowdepth += precip.snowdepth
 
     # Calculate pack density after compaction
@@ -337,7 +345,7 @@ def _update_snowpack_state(
 
     # Calculate albedo
     lastalbedo, snowage = calc_albedo(
-        parameters, lastalbedo, precip.snowdepth, lastsnowdepth, precip.swe, lastswe,
+        parameters, lastalbedo, precip.snowdepth, lastsnowdepth, precip.sfe, lastswe,
         lastsnowtemp, coords['lat'].ravel(), time_value[1], time_value[2],
         snowage, lastpackcc, sec_in_ts
     )
@@ -382,12 +390,12 @@ def run_snowclim_model(forcings_data, parameters):
             snowage = np.zeros(size_lat, dtype=np.float32)
         
         snowfallcc, lastpacktemp = _calculate_snow_temp_and_cold_content(
-            precip.swe, input_forcings, lastpackcc, lastswe, lastpacktemp)
+            precip.sfe, input_forcings, lastpackcc, lastswe, lastpacktemp)
         lastpackcc += snowfallcc
         snow_vars.CCsnowfall = snowfallcc.copy()
 
         # If there is snow on the ground, run the model
-        exist_snow = (precip.swe + lastswe) > 0
+        exist_snow = (precip.sfe + lastswe) > 0
         if np.sum(exist_snow) > 0:
             snow_vars.ExistSnow = exist_snow.copy()
 
@@ -487,7 +495,6 @@ def run_snowclim_model(forcings_data, parameters):
             b = lastswe > 0
             if np.any(b):
                 snow_vars.SnowDensity[b] = packsnowdensity[b]
-
         else:
             # Initialize arrays with default values
             (lastalbedo, lastswe, lastsnowdepth, packsnowdensity, lastpackcc,
