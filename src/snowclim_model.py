@@ -150,14 +150,14 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
     size_lat = forcings_data['coords']['lat'].size
     snow_vars = SnowModelVariables(size_lat)
 
-    # The max 2 here is to guarantee the average will be taken without errors in the 
-    # _apply_cold_content function.
-    smoothed_energy = np.full((max(2,parameters['smooth_time_steps']), size_lat), np.nan)
+    smoothed_energy = None
     if index > parameters['smooth_time_steps']:        
-        for l in range(parameters['smooth_time_steps']-1):
+        smoothed_energy = np.full((parameters['smooth_time_steps'], size_lat), np.nan)
+        for l in range(parameters['smooth_time_steps']):
             smoothed_energy[l, :] = snow_model_instances[index -l -1].Energy
     else:
         if index > 0:
+            smoothed_energy = np.full((index+1, size_lat), np.nan)
             for l in range(index):
                 smoothed_energy[l, :] = snow_model_instances[l].Energy
 
@@ -266,8 +266,7 @@ def _apply_cold_content_tax(lastpackcc, parameters, previous_energy, lastenergy)
     # Limit tax to be within 0 and maxtax
     tax = np.clip(tax, 0, parameters['maxtax'])
 
-    # Copy smoothed energy for modification
-    if parameters['smooth_time_steps'] > 1:
+    if parameters['smooth_time_steps'] > 1 and previous_energy is not None:
         previous_energy[-1,:] = lastenergy
         smoothed_energy = np.nanmean(previous_energy, axis=0)
     else:
