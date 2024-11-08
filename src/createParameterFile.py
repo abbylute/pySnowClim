@@ -13,7 +13,7 @@ def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=No
                           snowoff_month=None, snowoff_day=None, albedo_option=None,
                           max_albedo=None, z_0=None, z_h=None, lw_max=None,
                           Tstart=None, Tadd=None, maxtax=None, E0=None, E0_app=None,
-                          E0_stable=None, Ts_add=None, smooth_hr=None, ground_albedo=None,
+                          E0_stable=None, Ts_add=None, smooth_time_steps =None, ground_albedo=None,
                           snow_emis=None, snow_dens_default=None, G=None):
     """
     Writes parameters to a dictionary and saves it as a binary file.
@@ -42,7 +42,7 @@ def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=No
     :param E0_app: Windless exchange application option (default: 1)
     :param E0_stable: Windless exchange stability option (default: 2)
     :param Ts_add: Temperature add factor (default: 2)
-    :param smooth_hr: Smoothing hour (default: 12)
+    :param smooth_time_steps: Smoothing time steps (default: 12)
     :param ground_albedo: Ground albedo (default: 0.25)
     :param snow_emis: Snow emissivity (default: 0.98)
     :param snow_dens_default: Default snow density (default: 250)
@@ -80,7 +80,7 @@ def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=No
         'E0_app': 1 if E0_app is None else E0_app,
         'E0_stable': 2 if E0_stable is None else E0_stable,
         'Ts_add': 2 if Ts_add is None else Ts_add,
-        'smooth_hr': 12 if smooth_hr is None else smooth_hr,
+        'smooth_time_steps': 12 if smooth_time_steps is None else smooth_time_steps,
         'ground_albedo': 0.25 if ground_albedo is None else ground_albedo,
         'snow_emis': 0.98 if snow_emis is None else snow_emis, #% snow emissivity (from Snow and Climate, Armstrong + Brun eds, pg 58)
         'snow_dens_default': 250 if snow_dens_default is None else snow_dens_default, # % default snow density (kg/m3) (from Essery et al., (2013), snow compaction option 2, based on Cox et al., (1999))
