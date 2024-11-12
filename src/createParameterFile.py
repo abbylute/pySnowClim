@@ -55,7 +55,7 @@ def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=No
         hours_in_ts = 4
         cal = np.array([[d.year, d.month, d.day, d.hour, d.minute, d.second]
                         for d in (datetime(2001, 10, 1) + timedelta(hours=i * hours_in_ts)
-                                  for i in range(int((datetime(2002, 9, 30) - datetime(2001, 10, 1)).total_seconds() / 3600 / hours_in_ts)))])
+                                  for i in range(int((datetime(2002, 10, 1) - datetime(2001, 10, 1)).total_seconds() / 3600 / hours_in_ts)))])
         # raise ValueError("Argument 'cal' and 'hours_in_ts' are required.")
 
     
