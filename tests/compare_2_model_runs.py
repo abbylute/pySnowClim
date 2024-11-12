@@ -26,7 +26,7 @@ model runs.
   and the function prints any discrepancies, including the first timestep when the 
   variables diverge.
 
-- **_compare_2_model_runs(output_dir='none', variables='none')**:
+- **_compare_2_model_runs(output_dir='none', variables=[])**:
   The main function that integrates the previous functions. It loads the control dataset, 
   extracts the relevant model output from `.npy` files in the given directory, and compares 
   the new model output with the control dataset.
@@ -136,14 +136,14 @@ def _compare_datasets(new, control, variables):
                 timestep = np.argmax(times_with_diffs)
                 print(v + ' starting at timestep ' + str(timestep))
 
-def _compare_2_model_runs(output_dir='none', variables='none'):
+def _compare_2_model_runs(output_dir=None, variables=[]):
     """
     Runs a simple comparison of two snow model output datasets
     """
 
-    if output_dir == 'none':
+    if output_dir is None:
         output_dir = './pySnowClim/outputs/'
-    if variables == 'none':
+    if variables == []:
         variables = ['SnowfallWaterEq','SnowWaterEq','SnowMelt',
              'LW_down','LW_up','SW_down','SW_up',
              'Q_latent','Q_sensible','Q_precip',
@@ -172,13 +172,13 @@ if __name__ == '__main__':
 
     parser.add_argument('path',
                         help='Path where model outputs are located',
-                        default='none')
+                        default=None,
+                        nargs='?')
 
     parser.add_argument('variables',
                         help='Variables to compare',
                         nargs='*',
-                        const=None,
-                        default='none')
+                        const=None)
 
     args = vars(parser.parse_args())
 
