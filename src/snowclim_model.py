@@ -367,7 +367,7 @@ def _apply_temperature_instability_correction(lastswe, lastpacktemp, lastpackcc,
         Tuple[np.ndarray, np.ndarray]: Updated lastpacktemp and lastpackcc arrays.
     """
     # Define threshold based on time step
-    thres = sec_in_ts / const.MIN_2_SECS * 0.015  # 15mm for each hour in the time step
+    thres = sec_in_ts / const.HR_2_SECS * 0.015  # 15mm for each hour in the time step
 
     # Identify indices where the instability correction should apply
     instability_indices = np.where((lastswe < thres) & (lastswe > 0) & (lastpacktemp < input_forcings['tavg']))
@@ -443,7 +443,7 @@ def run_snowclim_model(forcings_data, parameters):
         snow_model_instances (list): list with the results based on time.
     """
     # number of seconds in each time step
-    sec_in_ts = parameters['hours_in_ts'] * const.MIN_2_SECS
+    sec_in_ts = parameters['hours_in_ts'] * const.HR_2_SECS
     coords = forcings_data['coords']
     size_lat = coords['lat'].size
     snow_model_instances = [None] * len(forcings_data['coords']['time'])

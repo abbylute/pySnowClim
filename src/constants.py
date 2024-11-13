@@ -6,6 +6,6 @@ CI = 2.117  # heat Capacity of Snow (kJ/kg/C)
 CW = 4.2  # heat Capacity of Water (kJ/kg/C)
 CA = 1.005  # heat Capacity of Air (kJ/kg/C)
 K = 0.41  # von Karman's constant
-MIN_2_SECS = 3600 # Time conversion minutes to second
+HR_2_SECS = 3600 # Time conversion hour to seconds
 K_2_C = 273.15 # Temperature conversion Kelvin to C 
 
