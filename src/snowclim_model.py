@@ -182,7 +182,7 @@ def _calculate_energy_fluxes(exist_snow, parameters, input_forcings, lastsnowtem
     energy_var = {name: np.zeros(len(exist_snow), dtype=np.float32) for name in var_list}
 
     # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---    
-    has_snow_and_wind = exist_snow & (input_forcings['vs'] > 0)
+    has_snow_and_wind = np.logical_and(exist_snow, (input_forcings['vs'] > 0))
     H, E, EV = calc_turbulent_fluxes(
         parameters, input_forcings['vs'][has_snow_and_wind], lastsnowtemp[has_snow_and_wind],
         input_forcings['tavg'][has_snow_and_wind], input_forcings['psfc'][has_snow_and_wind],
@@ -367,15 +367,15 @@ def _distribute_energy_to_snowpack(taxed_last_energy, snow_vars,  snowpack, sec_
     lastpackwater, lastswe, lastpackcc, packsnowdensity, snow_vars.RefrozenWater = calc_energy_to_refreezing(
         snowpack.lastpackwater.copy(), snowpack.lastswe.copy(), snowpack.lastpackcc.copy(), 
         snowpack.lastsnowdepth.copy(), snow_vars.RefrozenWater.copy(), snowpack.packsnowdensity.copy())
-
+    snowpack.lastpackcc = lastpackcc.copy()
+    
     # 3. Energy goes to melting
-    snow_vars.SnowMelt, snow_vars.MeltEnergy, lastpackwater, lastswe, lastsnowdepth = calc_energy_to_melt(
+    snow_vars.SnowMelt, snow_vars.MeltEnergy, lastpackwater, lastswe, lastsnowdepth, lastenergy  = calc_energy_to_melt(
         lastswe, snowpack.lastsnowdepth.copy(), packsnowdensity, taxed_last_energy, 
         lastpackwater, snow_vars.SnowMelt.copy(), snow_vars.MeltEnergy.copy())
     snowpack.lastswe = lastswe.copy()
     snowpack.lastsnowdepth = lastsnowdepth.copy()
     snowpack.packsnowdensity = packsnowdensity.copy()
-    snowpack.lastpackcc = lastpackcc.copy()
 
     # Update water in snowpack
     snow_vars.Runoff, lastpackwater = update_pack_water(
@@ -449,78 +449,6 @@ def _process_snowpack(input_forcings, parameters, snow_vars,
         
     return updated_runoff, lastenergy
 
-######################################################################################### 
-#           This part of the code will be removed, it is only here for the tests        #
-#           with the matlab code                                                        #
-#########################################################################################
-# import os
-# from scipy.io import loadmat
-
-# def load_mat_files_to_class(folder_path, spatial_dim):
-#     """
-#     Load all .mat files in a folder and populate a list of SnowModelVariables objects.
-    
-#     Args:
-#         folder_path (str): Path to the folder containing .mat files.
-#         spatial_dim (int or tuple): Spatial dimension(s) of the variables (e.g., 100 or (100,)).
-    
-#     Returns:
-#         list: A list of SnowModelVariables objects, where each object represents one time step.
-#     """
-#     # Get all .mat files in the folder
-#     mat_files = [f for f in os.listdir(folder_path) if f.endswith('.mat')]
-
-#     # Mapping for exceptions where the variable name in the .mat file doesn't match the attribute name
-#     variable_mapping = {
-#         'SnowfallWaterEq': 'SFE',  # Attribute : .mat file variable name
-#     }
-
-#     # Initialize a dictionary to store loaded data for each variable
-#     data_dict = {}
-
-#     # Load each .mat file into the dictionary
-#     for mat_file in mat_files:
-#         variable_name = os.path.splitext(mat_file)[0]  # Variable name from file name
-#         file_path = os.path.join(folder_path, mat_file)
-#         mat_data = loadmat(file_path)
-
-#         # Check if the variable name matches or is in the exception mapping
-#         if variable_name in mat_data:
-#             data_dict[variable_name] = mat_data[variable_name]
-#             time_dim = mat_data[variable_name].shape[0]
-#         else:
-#             for attr, mat_var in variable_mapping.items():
-#                 if variable_name == attr and mat_var in mat_data:
-#                     data_dict[variable_name] = mat_data[mat_var]
-
-#     # Create a list of SnowModelVariables objects, one for each time step
-#     snow_model_list = []
-#     for t in range(time_dim):
-#         snow_model = SnowModelVariables(spatial_dim)
-#         for key, value in data_dict.items():
-#             if hasattr(snow_model, key):
-#                 setattr(snow_model, key, value[t,:])  # Set attribute for the time step
-#         snow_model_list.append(snow_model)
-
-#     return snow_model_list
-
-# def compare_classes(obj1, obj2):
-#     if not isinstance(obj1, SnowModelVariables) or not isinstance(obj2, SnowModelVariables):
-#         raise TypeError("Both objects must be instances of SnowModelVariables.")
-    
-#     mismatches = {}
-#     for attr in vars(obj1):
-#         if not np.array_equal(getattr(obj1, attr), getattr(obj2, attr), equal_nan=True):
-#             mismatches[attr] = {
-#                 'obj1': getattr(obj1, attr),
-#                 'obj2': getattr(obj2, attr)
-#             }
-    
-#     return mismatches
-######################################################################################### 
-#           end of the part of the code that will be removed                            #
-#########################################################################################
-
 
 def run_snowclim_model(forcings_data, parameters):
     """
@@ -539,11 +467,7 @@ def run_snowclim_model(forcings_data, parameters):
     coords = forcings_data['coords']
     size_lat = coords['lat'].size
     snow_model_instances = [None] * len(forcings_data['coords']['time'])
-    
-#    matlab_ = load_mat_files_to_class('./pySnowClim/tests/datasets/matlab_fixed/',
-#                                      size_lat)
-    
-    # --- For each time step ---
+        
     for i, time_value in enumerate(forcings_data['coords']['time']):
         print(i)
         # loading necessary data to run the model
@@ -586,13 +510,4 @@ def run_snowclim_model(forcings_data, parameters):
             
         snow_model_instances[i] = _prepare_outputs(snow_vars, precip)
         
-#        if snow_model_instances[i] != matlab_[i]:
-#            print(i)
-#            mismatches = compare_classes(snow_model_instances[i], matlab_[i])            
-#            for attr, values in mismatches.items():
-#                print(f"Attribute: {attr}")
-#                print(f"  obj1: {values['obj1']}")
-#                print(f"  obj2: {values['obj2']}") 
-#            exit
-
     return snow_model_instances

@@ -23,7 +23,7 @@ def calc_energy_to_cc(lastpackcc, lastenergy, CCenergy):
     # Case 1: if cold content = 0 and lastenergy > 0, then nothing changes
 
     # Case 2: Cold content can be fully balanced by the available energy
-    b = (-lastpackcc > 0) & (-lastpackcc <= lastenergy)
+    b = np.logical_and(-lastpackcc > 0, -lastpackcc <= lastenergy)
     if np.any(b):
         lastenergy[b] += lastpackcc[b]
         lastpackcc[b] = 0

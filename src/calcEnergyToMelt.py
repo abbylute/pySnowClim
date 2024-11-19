@@ -30,7 +30,7 @@ def calc_energy_to_melt(lastswe, lastsnowdepth, packsnowdensity, lastenergy,
     """
     
     # Case where SWE is positive and energy is available
-    b = (lastswe > 0) & (lastenergy > 0)
+    b = np.logical_and(lastswe > 0, lastenergy > 0)
     # Initialize melt array
     melt = np.zeros_like(lastpackwater)
     
@@ -59,4 +59,4 @@ def calc_energy_to_melt(lastswe, lastsnowdepth, packsnowdensity, lastenergy,
     lastsnowdepth[b] = lastswe[b] * const.WATERDENS / packsnowdensity[b]
     lastsnowdepth[~b] = 0
 
-    return SnowMelt, MeltEnergy, lastpackwater, lastswe, lastsnowdepth
+    return SnowMelt, MeltEnergy, lastpackwater, lastswe, lastsnowdepth, lastenergy

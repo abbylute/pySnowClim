@@ -29,7 +29,9 @@ def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth,
     """
     
     # Condition for refreezing: available water, snow, cold content, and density < 550 kg/m^3
-    b = (lastpackwater > 0) & (lastswe > 0) & (lastpackcc < 0) & (packsnowdensity < 550)
+    b = np.logical_and(np.logical_and(lastpackwater > 0, lastswe > 0), 
+                       np.logical_and(lastpackcc < 0, packsnowdensity < 550)
+                       )
     
     # Potential energy from refreezing
     Prf = np.zeros_like(lastpackwater)
@@ -37,7 +39,7 @@ def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth,
         Prf[b] = const.WATERDENS * const.LATHEATFREEZ * lastpackwater[b]
 
     # 1. If cold content exceeds refreezing potential energy, freeze all water and update cold content
-    bb = b & (-lastpackcc >= Prf)
+    bb = np.logical_and(b, -lastpackcc >= Prf)
     if np.any(bb):
         lastswe[bb] += lastpackwater[bb]
         RefrozenWater[bb] = lastpackwater[bb]
@@ -46,7 +48,10 @@ def calc_energy_to_refreezing(lastpackwater, lastswe, lastpackcc, lastsnowdepth,
         Prf[bb] = 0
 
     # 2. If cold content is insufficient for full refreezing, freeze what is possible
-    bb = (lastpackwater > 0) & (lastswe > 0) & (lastpackcc < 0) & (-lastpackcc < Prf) & (packsnowdensity < 550)
+    bb = np.logical_and(lastpackwater > 0, lastswe > 0) 
+    bb = np.logical_and(bb, lastpackcc < 0) 
+    bb = np.logical_and(bb, -lastpackcc < Prf) 
+    bb = np.logical_and(bb, packsnowdensity < 550)
     if np.any(bb):
         RefrozenWater[bb] = -lastpackcc[bb] / (const.WATERDENS * const.LATHEATFREEZ)
         lastswe[bb] += RefrozenWater[bb]
