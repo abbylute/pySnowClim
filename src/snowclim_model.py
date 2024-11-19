@@ -227,7 +227,7 @@ def _calculate_energy_fluxes(exist_snow, parameters, input_forcings, lastsnowtem
     )
     energy_var['Q_sensible'][has_snow_and_wind] = H
     energy_var['E'][has_snow_and_wind] = E
-    energy_var['Q_latent'][has_snow_and_wind] = E
+    energy_var['Q_latent'][has_snow_and_wind] = EV
 
     # --- Rain heat flux into snowpack (kJ/m2/timestep) ---
     energy_var['Q_precip'][exist_snow] = const.CW * const.WATERDENS * np.maximum(0, input_forcings['tdmean'][exist_snow]) * newrain[exist_snow]
