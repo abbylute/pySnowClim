@@ -2,6 +2,9 @@
     PrecipitationProperties encapsulates properties related to snowfall, including rain,
     snow water equivalent (SWE), snow density, and calculated snow depth.
 """ 
+
+import numpy as np
+
 class PrecipitationProperties:
     """
     This class takes the precipitation properties as inputs and computes the snow
@@ -30,10 +33,10 @@ class PrecipitationProperties:
             water_density (float): Constant representing water density (kg/m^3),
                                    typically 1000 for fresh water.
         """
-        self.rain = rain
-        self.sfe = sfe
-        self.snowdens = snowdens
-        self.snowdepth = self._calculate_snowdepth(water_density)
+        self.rain = np.copy(rain)
+        self.sfe = np.copy(sfe)
+        self.snowdens = np.copy(snowdens)
+        self.snowdepth = self._calculate_snowdepth(np.copy(water_density))
 
     def _calculate_snowdepth(self, water_density):
         """

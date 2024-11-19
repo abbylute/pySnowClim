@@ -33,7 +33,7 @@ def calc_sublimation(E, SnowWaterEq, SnowDepth, SnowDensity, lastsnowtemp, lastp
     Sublimation[lastsnowtemp < 0] = -E[lastsnowtemp < 0] / const.WATERDENS  # Sublimation when snow temp < 0°C
     Evaporation[lastsnowtemp == 0] = -E[lastsnowtemp == 0] / const.WATERDENS  # Evaporation at 0°C
 
-    initialSWE = SnowWaterEq
+    initialSWE = SnowWaterEq.copy()
     # Update SWE, snow depth, and snow density
     has_sublimation = SnowWaterEq > Sublimation  # Sublimation occurs, update SWE, snow depth, cc
     no_snow_left = SnowWaterEq <= Sublimation  # Complete sublimation, no snow left

@@ -25,11 +25,9 @@ Albedo Calculation Models:
      and melting snow conditions, using snow depth and snow age. The model was adapted from the
      VIC snow utility.
 """
-
 import numpy as np
 import constants as const
 from calcInclinationAngle import calc_inclination_angle
-
 
 def calc_albedo(parameters, last_albedo, new_snow_depth,
                 last_snow_depth, new_swe, last_swe, last_snow_temp, lat,
@@ -73,7 +71,6 @@ def calc_albedo(parameters, last_albedo, new_snow_depth,
     snow_age : ndarray
         Updated snow age for each grid point.
     """
-
     if parameters['albedo_option'] == 1:
         albedo = _calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe,
                                           parameters, sec_in_ts)
