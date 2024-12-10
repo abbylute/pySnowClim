@@ -5,61 +5,41 @@ snow depth, snow density, and cold content (cc) based on energy flux (E) and sno
 import numpy as np
 import constants as const
 
-def calc_sublimation(E, SnowWaterEq, SnowDepth, SnowDensity, lastsnowtemp, lastpackcc, 
-                     SnowDensDefault, sublimation, condensation, lastpackwater):
+def calc_sublimation(E, snowpack, snow_vars, SnowDensDefault):
     """
     Update snowpack properties by calculating sublimation and evaporation.
 
     Parameters:
     -----------
-    - E: Energy flux (kg/m²/s).
-    - SnowWaterEq: Snow water equivalent (mm or m³ of water).
-    - SnowDepth: Depth of snow (m).
-    - SnowDensity: Density of snow (kg/m³).
-    - lastsnowtemp: Temperature of the snow (°C).
-    - lastpackcc: Cold content of the snowpack (kJ/kg).
-    - SnowDensDefault: Default snow density for new snow (kg/m³).
-    - sublimation: Current sublimation value (kg/m²).
-    - condensation: Current condensation value (kg/m²).
-    - lastpackwater: Amount of water in the snowpack (kg/m²).
+    E: Energy flux (kg/m²/s).
+    snow_vars (object): Snow variables object to update (e.g., CCenergy, SnowMelt, etc.).
+    snowpack (object): Snowpack variables class (e.g., lastsnowdepth, packsnowdensity, etc.).
+    SnowDensDefault: Density of snow (kg/m³).
 
     Returns:
     --------
-    - Updated sublimation, condensation, SnowWaterEq, SnowDepth, lastpackcc, SnowDensity, lastpackwater.
+    - Updated sublimation, condensation
     """
     # Calculate sublimation and evaporation
-    Sublimation = np.zeros(E.size)
-    Evaporation = np.zeros(E.size)
-    Sublimation[lastsnowtemp < 0] = -E[lastsnowtemp < 0] / const.WATERDENS  # Sublimation when snow temp < 0°C
-    Evaporation[lastsnowtemp == 0] = -E[lastsnowtemp == 0] / const.WATERDENS  # Evaporation at 0°C
-
-    initialSWE = SnowWaterEq.copy()
-    # Update SWE, snow depth, and snow density
-    has_sublimation = SnowWaterEq > Sublimation  # Sublimation occurs, update SWE, snow depth, cc
-    no_snow_left = SnowWaterEq <= Sublimation  # Complete sublimation, no snow left
-    # f = np.where(SnowWaterEq > Sublimation)[0]  # Sublimation occurs, update SWE, snow depth, cc
-    # f1 = np.where(SnowWaterEq <= Sublimation)[0]  # Complete sublimation, no snow left
-
-    # For non-complete sublimation
-    SnowWaterEq[has_sublimation] -= Sublimation[has_sublimation]
-    SnowDepth[has_sublimation] = SnowWaterEq[has_sublimation] / SnowDensity[has_sublimation] * const.WATERDENS
+    has_snow = snowpack.lastsnowdepth > 0 
+    Sublimation = np.where(np.logical_and(snow_vars.SnowTemp < 0, has_snow),
+                           -E/const.WATERDENS, 0) # Sublimation when snow temp < 0°C
+    Evaporation = np.where(np.logical_and(np.isclose(snow_vars.SnowTemp, 0, atol=1e-8), 
+                                          has_snow),
+                            -E/ const.WATERDENS, 0)  # Evaporation at 0°C
     
-    cc_sublimation = has_sublimation & (Sublimation>0)  #only update cc for sublimation, not condensation
-    lastpackcc[cc_sublimation] *= SnowWaterEq[cc_sublimation]/initialSWE[cc_sublimation]
+    has_sublimation = np.logical_and(snowpack.lastswe  > Sublimation, has_snow)  # Sublimation occurs, update SWE, snow depth, cc
+    no_snow_left = np.logical_and(snowpack.lastswe <= Sublimation, has_snow)  # Complete sublimation, no snow left
+
+    snowpack.update_pack_sublimation(Sublimation, has_sublimation)
 
     # Complete sublimation
-    Sublimation[no_snow_left] = SnowWaterEq[no_snow_left]
-    SnowWaterEq[no_snow_left] = 0
-    SnowDepth[no_snow_left] = 0
-    lastpackcc[no_snow_left] = 0
-    SnowDensity[no_snow_left] = SnowDensDefault
+    Sublimation[no_snow_left] = snowpack.lastswe[no_snow_left]
+    snowpack.complete_pack_sublimation(Evaporation, no_snow_left, SnowDensDefault)
 
     # Output sublimation and condensation
-    b = Sublimation > 0
-    sublimation[b] = Sublimation[b]
-    condensation[~b] = Sublimation[~b]
+    sub_cond = Sublimation > 0
+    sublimation = np.where(sub_cond, Sublimation, 0)
+    condensation = np.where(~sub_cond, Sublimation, 0)
 
-    # Update packwater by subtracting evaporation
-    lastpackwater = np.maximum(0, lastpackwater - Evaporation)
-
-    return sublimation, condensation, SnowWaterEq, SnowDepth, lastpackcc, SnowDensity, lastpackwater
+    return sublimation, condensation

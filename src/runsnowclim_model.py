@@ -5,7 +5,7 @@ for an area in Central Idaho. It:
  - Imports example forcing data
  - Runs the SnowClim model
  - Plots some results
- 
+
 The script can be adapted for different parameters, time periods, or datasets.
 """
 import os
@@ -20,7 +20,7 @@ from snowclim_model import run_snowclim_model
 def _load_forcing_data(data_dir):
     """
     Load meteorological forcing data and geospatial information from the specified directory.
-    
+
     Args:
         data_dir (str): Path to the directory containing the forcing data files.
 
@@ -31,7 +31,7 @@ def _load_forcing_data(data_dir):
     latlonelev = scipy.io.loadmat(f'{data_dir}lat_lon_elev.mat')
     lat = latlonelev['lat']
     lon = latlonelev['lon']
-    
+
     # Load meteorological data (forcing inputs)
     lrad = scipy.io.loadmat(f'{data_dir}lrad.mat')['lrad']
     solar = scipy.io.loadmat(f'{data_dir}solar.mat')['solar']
@@ -42,7 +42,7 @@ def _load_forcing_data(data_dir):
     huss = scipy.io.loadmat(f'{data_dir}huss.mat')['huss']
     relhum = scipy.io.loadmat(f'{data_dir}relhum.mat')['relhum']
     tdmean = scipy.io.loadmat(f'{data_dir}tdmean.mat')['tdmean']
-    
+
     # Return the data as a dictionary
     return {'coords':
             {
@@ -68,25 +68,26 @@ def _load_forcing_data(data_dir):
 def _load_parameter_file(parameterfilename):
     """
     Load the parameters from a pickle file if it exists.
-    
+
     Args:
         parameterfilename (str): Name of the file to load parameters from.
-        
+
     Returns:
         dict or None: Dictionary of parameters if file exists, otherwise None.
     """
-    if os.path.exists(parameterfilename):
-        print(f"Loading parameters from {parameterfilename}")
-        mat_data = scipy.io.loadmat(parameterfilename)
-    
-        # Remove metadata fields that start with '__' (like '__header__', '__version__', etc.)
-        parameters = {key: value for key, value in mat_data.items() if not key.startswith('__')}
-        parameters = parameters['S']
-        # with open(parameterfilename, 'rb') as f:
-        #     return pickle.load(f)
-    else:
+    if parameterfilename is None:
         parameters = create_dict_parameters()
-        
+    else:
+        if os.path.exists(parameterfilename):
+            print(f"Loading parameters from {parameterfilename}")
+            mat_data = scipy.io.loadmat(parameterfilename)
+
+            # Remove metadata fields that start with '__' (like '__header__', '__version__', etc.)
+            parameters = {key: value for key, value in mat_data.items() if not key.startswith('__')}
+            parameters = parameters['S']
+        else:
+            parameters = create_dict_parameters()
+
     return parameters
 
 
@@ -103,7 +104,7 @@ def _save_outputs(model_output, outputs_path=None):
     """
     if outputs_path is not None:
     # TODO: here or perhaps before the model runs, add a check that the output directory exists
-    # TODO: for now, saving these as .npy because it is easy and avoids added complications. 
+    # TODO: for now, saving these as .npy because it is easy and avoids added complications.
     #       May want to save as netcdf eventually.
         n_locations = model_output[0].SnowWaterEq.shape[0]
         variables_to_save = [x for x in dir(model_output[0]) if not x.startswith('__')]
@@ -116,16 +117,14 @@ def _save_outputs(model_output, outputs_path=None):
 
 
 def run_model(forcings_path, parameters_path, outputs_path):
-    
+
     print('Loading necessary files...')
     parameters = _load_parameter_file(parameters_path)
     forcings_data = _load_forcing_data(forcings_path)
-    
     forcings_data['coords']['time'] = parameters['cal']
-    
+
     print('Files loaded, running the model...')
     model_output = run_snowclim_model(forcings_data, parameters)
     _save_outputs(model_output, outputs_path)
 
     return model_output
-    

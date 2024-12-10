@@ -120,7 +120,7 @@ def _calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, par
     albedo = np.zeros_like(last_albedo)
 
     # No snow on the ground
-    b = last_swe == 0
+    b = np.isclose(last_swe, 0, atol=1e-8)
     albedo[b] = parameters['ground_albedo']
 
     # Fresh snow
@@ -129,11 +129,13 @@ def _calc_albedo_essery_opt1(last_albedo, last_snow_temp, new_swe, last_swe, par
                                   last_albedo[b]) * ((Sf[b] * dt) / So)
 
     # Cold snow
-    b = (last_swe > 0) & (new_swe == 0) & (last_snow_temp < -0.5)
+    only_last_swe = np.logical_and(last_swe > 0,
+                                    np.isclose(new_swe, 0, atol=1e-8))
+    b = np.logical_and(only_last_swe, last_snow_temp < -0.5)
     albedo[b] = last_albedo[b] - dt / Ta
 
     # Melting snow
-    b = (last_swe > 0) & (new_swe == 0) & (last_snow_temp >= -0.5)
+    b = np.logical_and(only_last_swe, last_snow_temp >= -0.5)
     albedo[b] = (last_albedo[b] - min_albedo) * np.exp(-dt / Tm) + min_albedo
 
     albedo = np.clip(albedo, min_albedo, parameters['max_albedo'])
@@ -179,12 +181,12 @@ def _calc_albedo_vic(new_snow_depth, snow_age, parameters, last_snow_depth,
         SNOW_ALB_ACCUM_A ** ((snow_age[c] / sec_per_day) ** SNOW_ALB_ACCUM_B)
 
     # Melting snow
-    c = b & (last_pack_cc == 0)
+    c = np.logical_and(b, np.isclose(last_pack_cc, 0, atol=1e-8))
     albedo[c] = SNOW_NEW_SNOW_ALB * \
         SNOW_ALB_THAW_A ** ((snow_age[c] / sec_per_day) ** SNOW_ALB_THAW_B)
 
     # No snow case
-    b = last_snow_depth == 0
+    b = np.isclose(last_snow_depth, 0, atol=1e-8)
     snow_age[b] = 0
     albedo[b] = parameters['ground_albedo']
 
@@ -243,7 +245,7 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
     if np.any(b):
         albedo[b] = albedo_vo / 2 + albedo_iro / 2
         snowage[b] = 0
-    
+
         inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
         c = np.cos(inc) < 0.5
         fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
@@ -253,19 +255,19 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
 
     # For new snow depths <= 0.01 m (albedo is a function of snow age)
     b = ~b
-    if np.any(b):    
+    if np.any(b):
         r1 = np.exp(5000 * (1 / 273.16 - 1. / lastsnowtemp[b]))
         r2 = np.minimum(r1**10, 1)
         r3 = 0.03
-    
+
         inc_age = (r1 + r2 + r3) / 1e6 * sec_in_ts
         snowage[b] += inc_age
         Fage = snowage[b] / (1 + snowage[b])
-    
+
         albedo_1 = (1 - Cv * Fage) * albedo_vo
         albedo_2 = (1 - Cir * Fage) * albedo_iro
         albedo[b] = albedo_1 / 2 + albedo_2 / 2
-    
+
         inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
         c = np.cos(inc) < 0.5
         fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
@@ -274,7 +276,7 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
         albedo[b] += extra
 
     # For no snow case
-    b = lastswe == 0
+    b = np.isclose(lastswe, 0, atol=1e-8)
     if np.any(b):
         albedo[b] = parameters['ground_albedo']
         snowage[b] = 0

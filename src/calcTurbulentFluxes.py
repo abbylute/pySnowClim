@@ -42,13 +42,12 @@ def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
     pa = psfcpa / (R * (tavg + const.K_2_C))
 
     # Calculate vapor densities (kg/m^3)
-    rhoa = huss
-    rhos = calculate_specific_humidity(lastsnowtemp, psfc)
+    rhoa = huss.copy()
+    rhos = calculate_specific_humidity(lastsnowtemp.copy(), psfc)
 
-    # Exchange coefficient for neutral conditions (CHN)
-    CHN = const.K**2 / \
-        (np.log(parameters['windHt'] / parameters['z_0'])
-         * np.log(parameters['tempHt'] / parameters['z_h']))
+    # Exchange coefficient for neutral conditions if not 'stability' then (CHN)
+    CH = const.K**2 * np.power(np.log(parameters['windHt'] / parameters['z_0']), -1) \
+        * np.power(np.log(parameters['tempHt'] / parameters['z_h']), -1)
 
     if parameters['stability']:
         # Calculate the bulk Richardson number
@@ -58,21 +57,20 @@ def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
         # Calculate FH as a function of Rib
         FH = np.full_like(tavg, np.nan)
         # For unstable case
-        FH[Rib < 0] = 1 - ((3 * c * Rib[Rib < 0]) / (1 + 3 * c**2 * CHN *
+        FH[Rib < 0] = 1 - ((3 * c * Rib[Rib < 0]) / (1 + 3 * c**2 * CH *
                            (-Rib[Rib < 0] * parameters['windHt'] / parameters['z_0'])**0.5))
         # For neutral case
-        FH[Rib == 0] = 1
+        FH[np.isclose(Rib, 0, atol=1e-8)] = 1
         # For stable case
-        FH[Rib > 0] = (1 + ((2 * c * Rib[Rib > 0]) / (1 + Rib[Rib > 0])**0.5))**-1
+        FH[Rib > 0] = (1 + ((2 * c * Rib[Rib > 0]) /
+                       (1 + Rib[Rib > 0])**0.5))**-1
 
         # Calculate exchange coefficient CH
-        CH = FH * CHN
-    else:
-        CH = CHN
+        CH *= FH
 
     # Latent heat of vaporization and sublimation
-    LatHeatVap = calculate_lat_heat_vap(lastsnowtemp)  # kJ/kg
-    LatHeatSub = calculate_lat_heat_sub(lastsnowtemp)  # kJ/kg
+    LatHeatVap = calculate_lat_heat_vap(lastsnowtemp.copy())  # kJ/kg
+    LatHeatSub = calculate_lat_heat_sub(lastsnowtemp.copy())  # kJ/kg
 
     # Windless exchange coefficient
     Ex = np.zeros_like(wind_speed)
@@ -101,8 +99,9 @@ def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
     EV *= sec_in_ts  # kJ/m2/s
 
     # Avoid NaNs for zero wind speed
-    H[wind_speed == 0] = 0
-    E[wind_speed == 0] = 0
-    EV[wind_speed == 0] = 0
+    has_zero_speed = np.isclose(wind_speed, 0, atol=1e-8)
+    H[has_zero_speed] = 0
+    E[has_zero_speed] = 0
+    EV[has_zero_speed] = 0
 
     return H, E, EV
