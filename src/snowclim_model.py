@@ -15,9 +15,7 @@ from SnowModelVariables import SnowModelVariables
 from PrecipitationProperties import PrecipitationProperties
 from SnowpackVariables import Snowpack
 
-from matlab_load import load_mat_files_to_class
-import time
-
+from tqdm import tqdm
 
 def _prepare_outputs(model_vars, precip):
     """
@@ -91,7 +89,6 @@ def _perform_precipitation_operations(forcings_data, parameters):
 
     # Calculate the cold content of the snowfall
     snowfallcc = const.WATERDENS * const.CI * SnowfallWaterEq * newsnowtemp
-
     precip = PrecipitationProperties(rainfall, SnowfallWaterEq, newsnowdensity,
                                      snowfallcc)
     return precip
@@ -114,8 +111,12 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
     - smoothed_energy: ndarray, energy values smoothed over specified hours.
     """
     # Extract current timestep forcings
-    input_forcings = {key: value[index, :]
-                      for key, value in forcings_data['forcings'].items()}
+    if forcings_data['forcings']['huss'].ndim > 1:
+        input_forcings = {key: value[index, :]
+                          for key, value in forcings_data['forcings'].items()}
+    else:
+        input_forcings = {key: value[index, np.newaxis]
+                          for key, value in forcings_data['forcings'].items()}
 
     # Initialize snow model variables for this timestep
     size_lat = forcings_data['coords']['lat'].size
@@ -387,10 +388,11 @@ def run_snowclim_model(forcings_data, parameters):
     # number of seconds in each time step
     coords = forcings_data['coords']
     size_lat = coords['lat'].size
-    snow_model_instances = [None] * len(forcings_data['coords']['time'])
+    snow_model_instances = [None] * len(forcings_data['coords']['time_sliced'])
     snowpack = Snowpack(size_lat, parameters)
 
-    for i, time_value in enumerate(forcings_data['coords']['time']):
+    for i, time_value in enumerate(tqdm(forcings_data['coords']['time_sliced'])):
+        # print(time_value)
         # loading necessary data to run the model
         input_forcings, snow_vars, previous_energy, precip = _process_forcings_and_energy(
             i, forcings_data, parameters, snow_model_instances)
