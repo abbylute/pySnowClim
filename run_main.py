@@ -32,10 +32,14 @@ if __name__ == "__main__":
                         default=None,
                         nargs='?')
 
+    parser.add_argument('save_format',
+                        help='File format to be saved (.npy or .nc)',
+                        default=None,
+                        nargs='?')
 
     args = vars(parser.parse_args())
 
-
     print('Starting pySnowClim model...')
-    model_output = run_model(args['path'], args['parameters'], args['output'])
+    model_output = run_model(args['path'], args['parameters'], args['output'],
+                             args['save_format'])
     print('pySnowClim model finished!')

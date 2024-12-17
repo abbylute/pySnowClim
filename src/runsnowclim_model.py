@@ -9,15 +9,61 @@ for an area in Central Idaho. It:
 The script can be adapted for different parameters, time periods, or datasets.
 """
 import os
-import pickle
 import scipy.io
 import numpy as np
+import xarray as xr
 
 from createParameterFile import create_dict_parameters
 from snowclim_model import run_snowclim_model
 
+FORCINGS = {'lrad', 'solar', 'tavg', 'ppt', 'vs', 'psfc', 'huss', 'relhum','tdmean'}
 
-def _load_forcing_data(data_dir):
+def _load_forcing_data(file_path):
+    """
+    Load data from a file based on its extension.
+
+    Parameters:
+        file_path (str): Path to the input file.
+
+    Returns:
+        dict: Dataset in dictionary form with variable names as keys and data arrays as values.
+    """
+    ext = os.path.splitext(file_path)[-1].lower()
+    if ext == ".nc":
+        return _load_ncdf_file(file_path)
+    else:
+        #raise ValueError(f"Unsupported file extension: {ext}")
+        return _load_mat_data(file_path)
+
+
+def _load_ncdf_file(file_path):
+
+    ds = xr.open_dataset(file_path).isel(space=123)
+    lat = ds['lat'].values
+    lon = ds['lon'].values
+    time = ds['time'].values
+    time_sliced = [np.datetime64(t,'s').astype(str) for t in time]
+    time_sliced = [[int(d[:4]), int(d[5:7]), int(d[8:10]), int(d[11:13]), int(d[14:16]), int(d[17:19])] for d in time_sliced]
+
+    # Load meteorological data (forcing inputs)
+    forcings = {}
+    for f in FORCINGS:
+        forcings[f] = ds[f].values
+
+    final_dict= {'coords':
+            {
+            'lat': lat,
+            'lon': lon,
+            'time': time,
+            'time_sliced': time_sliced,
+            },
+        'forcings': forcings
+        }
+    ds.close()
+    return final_dict
+
+
+def _load_mat_data(data_dir):
     """
     Load meteorological forcing data and geospatial information from the specified directory.
 
@@ -27,6 +73,7 @@ def _load_forcing_data(data_dir):
     Returns:
         dict: Dictionary containing the loaded variables (lat, lon, lrad, solar, tavg, ppt, vs, psfc, huss, relhum, tdmean).
     """
+
     # Load latitude, longitude, and elevation data
     latlonelev = scipy.io.loadmat(f'{data_dir}lat_lon_elev.mat')
     lat = latlonelev['lat']
@@ -49,6 +96,7 @@ def _load_forcing_data(data_dir):
             'lat': lat,
             'lon': lon,
             'time': None,
+            'time_sliced': None,
             },
         'forcings':
             {
@@ -91,7 +139,7 @@ def _load_parameter_file(parameterfilename):
     return parameters
 
 
-def _save_outputs(model_output, outputs_path=None):
+def _save_outputs_npy(model_output, outputs_path=None):
     """
     Save model outputs to file.
 
@@ -102,29 +150,83 @@ def _save_outputs(model_output, outputs_path=None):
     Returns:
         nothing
     """
-    if outputs_path is not None:
-    # TODO: here or perhaps before the model runs, add a check that the output directory exists
-    # TODO: for now, saving these as .npy because it is easy and avoids added complications.
-    #       May want to save as netcdf eventually.
-        n_locations = model_output[0].SnowWaterEq.shape[0]
-        variables_to_save = [x for x in dir(model_output[0]) if not x.startswith('__')]
-        for v in variables_to_save:
-            var_data = np.empty((len(model_output),n_locations))
-            for t in range(len(model_output)):
-                var_data[t,:] = getattr(model_output[t],v)
-            np.save(outputs_path + v + '.npy', var_data)
+    n_locations = model_output[0].SnowWaterEq.shape[0]
+    variables_to_save = [x for x in dir(model_output[0]) if not x.startswith('__')]
+    for v in variables_to_save:
+        var_data = np.empty((len(model_output),n_locations))
+        for t in range(len(model_output)):
+            var_data[t,:] = getattr(model_output[t],v)
+        np.save(outputs_path + v + '.npy', var_data)
 
 
+def _save_variables_as_ncdf(snow_model_list, lat, lon, time, output_dir):
+    """
+    Save the variables of SnowModelVariables as individual NetCDF files.
 
-def run_model(forcings_path, parameters_path, outputs_path):
+    Args:
+        snow_model_list (list): A list of SnowModelVariables instances, each representing a time step.
+        lat (np.ndarray): Latitude values (1D array).
+        lon (np.ndarray): Longitude values (1D array).
+        time (np.ndarray): Time values (1D array, e.g., datetime objects or strings).
+        output_dir (str): Directory to save the NetCDF files.
+    """
+    # guarantee to work on size 1 or size > 1
+    lat = np.atleast_1d(lat)
+    lon = np.atleast_1d(lon)
+
+    # Calculate the expected shape of combined_data
+    expected_shape = (len(time), len(lat), len(lon))
+
+    # Get the first instance to determine variable names
+    first_instance = snow_model_list[0]
+    variable_names = [var for var in dir(first_instance) if not var.startswith("_")]
+
+    for variable_name in variable_names:
+        # Combine data for this variable across all time steps
+        combined_data = np.stack([getattr(model, variable_name) for model in snow_model_list], axis=0)
+        # Reshape combined_data to match the expected shape
+        combined_data = combined_data.reshape(expected_shape)
+
+        # Create an xarray DataArray
+        da = xr.DataArray(
+            combined_data,
+            dims=("time", "lat", "lon"),
+            coords={"time": time, "lat": lat, "lon": lon},
+            name=variable_name,
+            attrs={"description": f"{variable_name} from SnowModelVariables"}
+        )
+
+        # Define the output file path
+        file_path = os.path.join(output_dir, f"{variable_name}.nc")
+
+        # Save as NetCDF
+        da.to_netcdf(file_path)
+        print(f"Saved {variable_name} to {file_path}")
+
+
+def run_model(forcings_path, parameters_path, outputs_path=None, save_format=None):
 
     print('Loading necessary files...')
     parameters = _load_parameter_file(parameters_path)
     forcings_data = _load_forcing_data(forcings_path)
-    forcings_data['coords']['time'] = parameters['cal']
+
+    ext = os.path.splitext(forcings_path)[-1].lower()
+    if ext != ".nc":
+        forcings_data['coords']['time_sliced'] = parameters['cal']
 
     print('Files loaded, running the model...')
     model_output = run_snowclim_model(forcings_data, parameters)
-    _save_outputs(model_output, outputs_path)
+    if outputs_path is not None:
+        if os.path.exists(outputs_path):
+            if save_format == '.nc':
+                _save_variables_as_ncdf(model_output,
+                                        forcings_data['coords']['lat'],
+                                        forcings_data['coords']['lon'],
+                                        forcings_data['coords']['time'],
+                                        outputs_path)
+            else:
+                _save_outputs_npy(model_output, outputs_path)
+        else:
+            print('Output to save files does not exist!')
 
     return model_output
