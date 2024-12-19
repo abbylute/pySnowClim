@@ -242,11 +242,18 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
 
     # For new snow depths > 0.01 m
     b = newsnowdepth > 0.01
+    if lat.shape != b.shape:
+        lat_b = np.broadcast_to(lat, b.shape)
+    else:
+        lat_b = lat
+
     if np.any(b):
         albedo[b] = albedo_vo / 2 + albedo_iro / 2
         snowage[b] = 0
 
-        inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
+        # lat_b = np.broadcast_to(lat[:, np.newaxis], b.shape)
+
+        inc = calc_inclination_angle(lat_b[b], month, day) * np.pi / 180
         c = np.cos(inc) < 0.5
         fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
         extra = np.zeros_like(inc)
@@ -268,7 +275,10 @@ def _calc_albedo_tarboton(lastsnowtemp, snowage, newsnowdepth, lat, month, day, 
         albedo_2 = (1 - Cir * Fage) * albedo_iro
         albedo[b] = albedo_1 / 2 + albedo_2 / 2
 
-        inc = calc_inclination_angle(lat[b], month, day) * np.pi / 180
+        # lat_b = np.broadcast_to(lat, b.shape)
+        # lat_b = np.broadcast_to(lat[:, np.newaxis], b.shape)
+
+        inc = calc_inclination_angle(lat_b[b], month, day) * np.pi / 180
         c = np.cos(inc) < 0.5
         fpsi = 0.5 * (3. / (1 + 4 * np.cos(inc[c])) - 1)
         extra = np.zeros_like(inc)

@@ -21,8 +21,11 @@ def calc_inclination_angle(lat, month, day=15):
     """
 
     # Calculate day of the year (doy)
-    date = datetime(2012, month, day)
-    doy = (date - datetime(2012, 1, 1)).days + 1  # days since start of year
+    if month == 2 and day == 29:
+        day = 28
+
+    date = datetime(2013, month, day)
+    doy = (date - datetime(2013, 1, 1)).days + 1  # days since start of year
 
     # Declination angle calculation
     decl_angle = 23.45 * np.sin(2 * np.pi * (284 + doy) / 365)

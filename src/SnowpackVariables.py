@@ -231,7 +231,7 @@ class Snowpack:
 
         self.update_snowpack_water(snow_vars.ExistSnow, parameters['lw_max'])
         self._calc_rain_in_snow(snow_vars.ExistSnow, previouspackwater)
-        self._calculate_albedo(parameters, precip, snow_vars, coords['lat'].ravel(),
+        self._calculate_albedo(parameters, precip, snow_vars, coords['lat'],
                                time_value[1], time_value[2])
 
     def adjust_temp_snow(self):

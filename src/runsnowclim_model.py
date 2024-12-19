@@ -4,7 +4,6 @@ for an area in Central Idaho. It:
  - Sets default parameter values
  - Imports example forcing data
  - Runs the SnowClim model
- - Plots some results
 
 The script can be adapted for different parameters, time periods, or datasets.
 """
@@ -38,9 +37,15 @@ def _load_forcing_data(file_path):
 
 def _load_ncdf_file(file_path):
 
-    ds = xr.open_dataset(file_path).isel(space=123)
-    lat = ds['lat'].values
+    ds = xr.open_dataset(file_path)#.isel(space=123)
+    if np.ndim(ds['lat'].values) > 0:
+        lat = np.broadcast_to(ds['lat'].values[:, np.newaxis],
+                              (len(ds['lat'].values), len(ds['lon'].values)))
+    else:
+        lat = np.array(ds['lat'].values).reshape(1,1)
+
     lon = ds['lon'].values
+
     time = ds['time'].values
     time_sliced = [np.datetime64(t,'s').astype(str) for t in time]
     time_sliced = [[int(d[:4]), int(d[5:7]), int(d[8:10]), int(d[11:13]), int(d[14:16]), int(d[17:19])] for d in time_sliced]
@@ -48,7 +53,10 @@ def _load_ncdf_file(file_path):
     # Load meteorological data (forcing inputs)
     forcings = {}
     for f in FORCINGS:
-        forcings[f] = ds[f].values
+        if ds[f].values.ndim == 1:
+            forcings[f] = ds[f].values.reshape(-1, 1, 1)
+        else:
+            forcings[f] = ds[f].values
 
     final_dict= {'coords':
             {
@@ -150,12 +158,12 @@ def _save_outputs_npy(model_output, outputs_path=None):
     Returns:
         nothing
     """
-    n_locations = model_output[0].SnowWaterEq.shape[0]
+    n_locations = model_output[0].SnowWaterEq.shape[1]
     variables_to_save = [x for x in dir(model_output[0]) if not x.startswith('__')]
     for v in variables_to_save:
         var_data = np.empty((len(model_output),n_locations))
         for t in range(len(model_output)):
-            var_data[t,:] = getattr(model_output[t],v)
+            var_data[t,:] = getattr(model_output[t],v).ravel()
         np.save(outputs_path + v + '.npy', var_data)
 
 
@@ -171,11 +179,11 @@ def _save_variables_as_ncdf(snow_model_list, lat, lon, time, output_dir):
         output_dir (str): Directory to save the NetCDF files.
     """
     # guarantee to work on size 1 or size > 1
-    lat = np.atleast_1d(lat)
+    # lat = np.atleast_1d(lat)
     lon = np.atleast_1d(lon)
 
     # Calculate the expected shape of combined_data
-    expected_shape = (len(time), len(lat), len(lon))
+    expected_shape = (len(time), len(lat[:,0]), len(lon))
 
     # Get the first instance to determine variable names
     first_instance = snow_model_list[0]
@@ -191,7 +199,7 @@ def _save_variables_as_ncdf(snow_model_list, lat, lon, time, output_dir):
         da = xr.DataArray(
             combined_data,
             dims=("time", "lat", "lon"),
-            coords={"time": time, "lat": lat, "lon": lon},
+            coords={"time": time, "lat": lat[:,0], "lon": lon},
             name=variable_name,
             attrs={"description": f"{variable_name} from SnowModelVariables"}
         )
