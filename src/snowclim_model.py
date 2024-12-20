@@ -16,6 +16,7 @@ from PrecipitationProperties import PrecipitationProperties
 from SnowpackVariables import Snowpack
 
 from tqdm import tqdm
+import time
 
 def _prepare_outputs(model_vars, precip):
     """
@@ -111,7 +112,7 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
     - smoothed_energy: ndarray, energy values smoothed over specified hours.
     """
     # Extract current timestep forcings
-    if forcings_data['forcings']['huss'].ndim > 1:
+    if forcings_data['forcings']['huss'].ndim > 2:
         input_forcings = {key: value[index, :]
                           for key, value in forcings_data['forcings'].items()}
     else:
@@ -119,20 +120,21 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
                           for key, value in forcings_data['forcings'].items()}
 
     # Initialize snow model variables for this timestep
-    size_lat = forcings_data['coords']['lat'].size
-    snow_vars = SnowModelVariables(size_lat)
+    domain_size = _define_size(forcings_data)
+    snow_vars = SnowModelVariables(domain_size)
 
     smoothed_energy = None
-    if index > parameters['smooth_time_steps']:
-        smoothed_energy = np.full(
-            (parameters['smooth_time_steps'], size_lat), np.nan)
-        for l in range(parameters['smooth_time_steps']):
-            smoothed_energy[l, :] = snow_model_instances[index - l - 1].Energy
-    else:
-        if index > 0:
-            smoothed_energy = np.full((index+1, size_lat), np.nan)
-            for l in range(index):
-                smoothed_energy[l, :] = snow_model_instances[l].Energy
+    if parameters['smooth_time_steps'] > 0:
+        if index > parameters['smooth_time_steps']:
+            smoothed_energy = np.full(
+                (parameters['smooth_time_steps'], *domain_size), np.nan)
+            for l in range(parameters['smooth_time_steps']):
+                smoothed_energy[l, :,:] = snow_model_instances[index - l - 1].Energy
+        else:
+            if index > 0:
+                smoothed_energy = np.full((index+1, *domain_size), np.nan)
+                for l in range(index):
+                    smoothed_energy[l, :,:] = snow_model_instances[l].Energy
 
     # Calculate new precipitation components
     precip = _perform_precipitation_operations(input_forcings, parameters)
@@ -158,8 +160,7 @@ def _calculate_energy_fluxes(snow_vars, parameters, input_forcings, newrain,
     """
     var_list = ['Q_sensible', 'E', 'Q_latent', 'Q_precip', 'SW_up', 'SW_down', 'LW_down',
                 'LW_up']
-    energy_var = {name: np.zeros(
-        len(snow_vars.ExistSnow), dtype=np.float32) for name in var_list}
+    energy_var = {name: np.zeros_like(snow_vars.ExistSnow, dtype=np.float32) for name in var_list}
     sec_in_ts = parameters['hours_in_ts'] * const.HR_2_SECS
 
     # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---
@@ -373,6 +374,17 @@ def _run_snowclim_step(snow_vars, snowpack, precip, input_forcings, parameters, 
     return snowpack, snow_vars
 
 
+def _define_size(forcings_data):
+
+    if forcings_data['forcings']['huss'].ndim > 2:
+        domain_size = (forcings_data['coords']['lat'].shape[0],
+                       forcings_data['coords']['lon'].size)
+    else:
+        domain_size = (1,forcings_data['coords']['lat'].size)
+
+    return domain_size
+
+
 def run_snowclim_model(forcings_data, parameters):
     """
     Simulates snow accumulation, melting, sublimation, condensation, and energy balance
@@ -387,19 +399,19 @@ def run_snowclim_model(forcings_data, parameters):
     """
     # number of seconds in each time step
     coords = forcings_data['coords']
-    size_lat = coords['lat'].size
+
+    domain_size = _define_size(forcings_data)
     snow_model_instances = [None] * len(forcings_data['coords']['time_sliced'])
-    snowpack = Snowpack(size_lat, parameters)
+    snowpack = Snowpack(domain_size, parameters)
 
     for i, time_value in enumerate(tqdm(forcings_data['coords']['time_sliced'])):
-        # print(time_value)
         # loading necessary data to run the model
         input_forcings, snow_vars, previous_energy, precip = _process_forcings_and_energy(
             i, forcings_data, parameters, snow_model_instances)
 
         # Reset to 0 snow at the specified time of year
         if time_value[1] == parameters['snowoff_month'] and time_value[2] == parameters['snowoff_day']:
-            snowpack = Snowpack(size_lat, parameters)
+            snowpack = Snowpack(domain_size, parameters)
 
         snowpack, snow_vars = _run_snowclim_step(
             snow_vars, snowpack, precip, input_forcings, parameters, coords, time_value, previous_energy)
