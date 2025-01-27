@@ -39,8 +39,7 @@ def _load_ncdf_file(file_path):
 
     ds = xr.open_dataset(file_path)#.isel(space=123)
     if np.ndim(ds['lat'].values) > 0:
-        lat = np.broadcast_to(ds['lat'].values[:, np.newaxis],
-                              (len(ds['lat'].values), len(ds['lon'].values)))
+        lat = np.array(ds['lat'].values)
     else:
         lat = np.array(ds['lat'].values).reshape(1,1)
 
