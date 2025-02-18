@@ -1,6 +1,5 @@
 """
-This script runs the SnowClim Model using an example of 4-hourly forcing data for the water year 2002
-for an area in Central Idaho. It:
+This script runs the SnowClim Model. It:
  - Sets default parameter values
  - Imports example forcing data
  - Runs the SnowClim model
@@ -11,13 +10,14 @@ import os
 import scipy.io
 import numpy as np
 import xarray as xr
+import json
 
 from createParameterFile import create_dict_parameters
 from snowclim_model import run_snowclim_model
 
 FORCINGS = {'lrad', 'solar', 'tavg', 'ppt', 'vs', 'psfc', 'huss', 'relhum','tdmean'}
 
-def _load_forcing_data(file_path):
+def _load_forcing_data(file_path, parameters):
     """
     Load data from a file based on its extension.
 
@@ -29,15 +29,25 @@ def _load_forcing_data(file_path):
     """
     ext = os.path.splitext(file_path)[-1].lower()
     if ext == ".nc":
-        return _load_ncdf_file(file_path)
+        return _load_ncdf_file(file_path, parameters)
     else:
         #raise ValueError(f"Unsupported file extension: {ext}")
         return _load_mat_data(file_path)
 
 
-def _load_ncdf_file(file_path):
+def _load_ncdf_file(file_path, parameters):
+    """
+    Loads a NetCDF file and extracts meteorological forcing data, time, and coordinates.
 
-    ds = xr.open_dataset(file_path)#.isel(space=123)
+    Args:
+        file_path (str): Path to the NetCDF file.
+        parameters (dict): Dictionary containing model parameters.
+
+    Returns:
+        dict: Extracted data including latitude, longitude, time, and forcings.
+    """
+    ds = xr.open_dataset(file_path)#.sel(space=594)
+
     if np.ndim(ds['lat'].values) > 0:
         lat = np.broadcast_to(ds['lat'].values[:, np.newaxis],
                               (len(ds['lat'].values), len(ds['lon'].values)))
@@ -45,9 +55,8 @@ def _load_ncdf_file(file_path):
         lat = np.array(ds['lat'].values).reshape(1,1)
 
     lon = ds['lon'].values
-
     time = ds['time'].values
-    time_sliced = [np.datetime64(t,'s').astype(str) for t in time]
+    time_sliced = [str(np.datetime64(t,'s')) for t in time]
     time_sliced = [[int(d[:4]), int(d[5:7]), int(d[8:10]), int(d[11:13]), int(d[14:16]), int(d[17:19])] for d in time_sliced]
 
     # Load meteorological data (forcing inputs)
@@ -57,6 +66,13 @@ def _load_ncdf_file(file_path):
             forcings[f] = ds[f].values.reshape(-1, 1, 1)
         else:
             forcings[f] = ds[f].values
+
+        # if f == 'ppt':
+        #     forcings[f] /= 1000
+
+        # converting from kJ m-2 hr-1 to kJ m-2 timestep-1
+        if f == 'lrad' or f == 'solar':
+            forcings[f] *= parameters['hours_in_ts']
 
     final_dict= {'coords':
             {
@@ -68,6 +84,7 @@ def _load_ncdf_file(file_path):
         'forcings': forcings
         }
     ds.close()
+
     return final_dict
 
 
@@ -123,7 +140,7 @@ def _load_mat_data(data_dir):
 
 def _load_parameter_file(parameterfilename):
     """
-    Load the parameters from a pickle file if it exists.
+    Load the parameters from a json file if exists.
 
     Args:
         parameterfilename (str): Name of the file to load parameters from.
@@ -132,16 +149,15 @@ def _load_parameter_file(parameterfilename):
         dict or None: Dictionary of parameters if file exists, otherwise None.
     """
     if parameterfilename is None:
+        print("Parameter file undefined, using default parameters")
         parameters = create_dict_parameters()
     else:
         if os.path.exists(parameterfilename):
             print(f"Loading parameters from {parameterfilename}")
-            mat_data = scipy.io.loadmat(parameterfilename)
-
-            # Remove metadata fields that start with '__' (like '__header__', '__version__', etc.)
-            parameters = {key: value for key, value in mat_data.items() if not key.startswith('__')}
-            parameters = parameters['S']
+            with open(parameterfilename, "r") as f:
+                parameters = json.load(f)
         else:
+            print(f"Parameter file {parameterfilename} not found, using default parameters")
             parameters = create_dict_parameters()
 
     return parameters
@@ -216,7 +232,8 @@ def run_model(forcings_path, parameters_path, outputs_path=None, save_format=Non
 
     print('Loading necessary files...')
     parameters = _load_parameter_file(parameters_path)
-    forcings_data = _load_forcing_data(forcings_path)
+    print(parameters)
+    forcings_data = _load_forcing_data(forcings_path, parameters)
 
     ext = os.path.splitext(forcings_path)[-1].lower()
     if ext != ".nc":

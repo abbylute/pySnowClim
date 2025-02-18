@@ -9,22 +9,20 @@ import numpy as np
 from datetime import datetime, timedelta
 
 
-def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=None, tempHt=None,
+def create_dict_parameters(cal=None, hours_in_ts=4, stability=None, windHt=None, tempHt=None,
                           snowoff_month=None, snowoff_day=None, albedo_option=None,
                           max_albedo=None, z_0=None, z_h=None, lw_max=None,
                           Tstart=None, Tadd=None, maxtax=None, E0=None, E0_app=None,
                           E0_stable=None, Ts_add=None, smooth_time_steps =None, ground_albedo=None,
                           snow_emis=None, snow_dens_default=None, G=None):
     """
-    Writes parameters to a dictionary and saves it as a binary file.
-    Default values are used where none are provided.
+    Writes parameters to a dictionary.
     Default values are those used in application of the snow model to the
-    western United States, some of which were determined through calibration 
-    at SNOTEL stations (Lute et al., in prep).
+    western United States, some of which were determined through calibration
+    at SNOTEL stations (Lute et al., 2022).
 
-
-    :param cal: Calibration data (required)
-    :param hours_in_ts: Hours in time step
+    :param cal: Time period for the model run (default: (2001-10-01 to 2002-09-30))
+    :param hours_in_ts: Hours in time step (default: 4)
     :param stability: Stability setting (default: 1)
     :param windHt: Wind height (default: 10)
     :param tempHt: Temperature height (default: 2)
@@ -49,19 +47,15 @@ def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=No
     :param G: Ground conduction (default: 173/86400 kJ/m2/s)
     :param parameterfilename: Name of the file to save the parameter dictionary
     """
-
-    if cal is None or hours_in_ts is None:
+    if cal is None :
         # Time period for the model run (2001-10-01 to 2002-09-30)
-        hours_in_ts = 4
         cal = np.array([[d.year, d.month, d.day, d.hour, d.minute, d.second]
                         for d in (datetime(2001, 10, 1) + timedelta(hours=i * hours_in_ts)
                                   for i in range(int((datetime(2002, 10, 1) - datetime(2001, 10, 1)).total_seconds() / 3600 / hours_in_ts)))])
-        # raise ValueError("Argument 'cal' and 'hours_in_ts' are required.")
 
-    
     # Create a dictionary to store parameters
     parameters = {
-        'cal': cal, #%datevec(datetime(2000,10,1,0,0,0):hours(S.hours_in_ts):datetime(2013,9,30,23,0,0));
+        'cal': cal,
         'hours_in_ts': hours_in_ts,
         'stability': 1 if stability is None else stability,
         'windHt': 10 if windHt is None else windHt,
@@ -80,11 +74,11 @@ def create_dict_parameters(cal=None, hours_in_ts=None, stability=None, windHt=No
         'E0_app': 1 if E0_app is None else E0_app,
         'E0_stable': 2 if E0_stable is None else E0_stable,
         'Ts_add': 2 if Ts_add is None else Ts_add,
-        'smooth_time_steps': 12 if smooth_time_steps is None else smooth_time_steps,
+        'smooth_time_steps': 24 // hours_in_ts if smooth_time_steps is None else smooth_time_steps,
         'ground_albedo': 0.25 if ground_albedo is None else ground_albedo,
         'snow_emis': 0.98 if snow_emis is None else snow_emis, #% snow emissivity (from Snow and Climate, Armstrong + Brun eds, pg 58)
         'snow_dens_default': 250 if snow_dens_default is None else snow_dens_default, # % default snow density (kg/m3) (from Essery et al., (2013), snow compaction option 2, based on Cox et al., (1999))
         'G': (173 / 86400) if G is None else G #% ground conduction (kJ/m2/s), from Walter et al., (2005)
     }
-    
-    return parameters    
+
+    return parameters
