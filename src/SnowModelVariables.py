@@ -1,10 +1,10 @@
 """
 SnowModelVariables Class
 
-This script defines the SnowModelVariables class, which initializes and holds the state variables 
-for a snow-climate model. These variables represent different physical quantities such as 
-snow depth, snow water equivalent, snow melt, sublimation, condensation, runoff, and energy 
-fluxes. Each variable is initialized as an array of NaN values with a given shape (outdim) 
+This script defines the SnowModelVariables class, which initializes and holds the state variables
+for a snow-climate model. These variables represent different physical quantities such as
+snow depth, snow water equivalent, snow melt, sublimation, condensation, runoff, and energy
+fluxes. Each variable is initialized as an array of NaN values with a given shape (outdim)
 to be used in the simulation of snow and energy balance processes.
 
 SnowMelt (array-like): Snow melt (m).
@@ -44,10 +44,10 @@ class SnowModelVariables:
     """
 
     def __init__(self, outdim):
-        self.SnowMelt = np.full(outdim, np.nan, dtype=np.float32)
-        self.SnowWaterEq = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowMelt = np.zeros(outdim, dtype=np.float32)
+        self.SnowWaterEq = np.zeros(outdim, dtype=np.float32)
         self.SnowfallWaterEq = np.full(outdim, np.nan, dtype=np.float32)
-        self.SnowDepth = np.full(outdim, np.nan, dtype=np.float32)
+        self.SnowDepth = np.zeros(outdim, dtype=np.float32)
         self.SnowDensity = np.full(outdim, np.nan, dtype=np.float32)
         self.Sublimation = np.full(outdim, np.nan, dtype=np.float32)
         self.Condensation = np.full(outdim, np.nan, dtype=np.float32)
