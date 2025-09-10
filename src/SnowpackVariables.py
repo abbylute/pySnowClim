@@ -64,8 +64,8 @@ class Snowpack:
             self.n_lat, dtype=np.float32)  # Cold content
         self.lastpackwater = np.zeros(
             self.n_lat, dtype=np.float32)  # Pack water content
-        self.rain_in_snow = np.full(self.n_lat, np.nan, dtype=np.float32)
-        self.runoff = np.full(self.n_lat, np.nan, dtype=np.float32)
+        self.rain_in_snow = np.zeros(self.n_lat, dtype=np.float32)
+        self.runoff = np.zeros(self.n_lat, dtype=np.float32)
 
     def initialize_full_snowpack(self):
         """Initialize all snowpack variables, including 'lastpacktemp' and 'snowage'."""

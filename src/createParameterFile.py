@@ -9,10 +9,10 @@ import numpy as np
 from datetime import datetime, timedelta
 
 
-def create_dict_parameters(cal=None, hours_in_ts=4, stability=None, windHt=None, tempHt=None,
+def create_dict_parameters(cal=None, hours_in_ts=24, stability=None, windHt=None, tempHt=None,
                           snowoff_month=None, snowoff_day=None, albedo_option=None,
                           max_albedo=None, z_0=None, z_h=None, lw_max=None,
-                          Tstart=None, Tadd=None, maxtax=None, E0=None, E0_app=None,
+                          Tstart=None, Tadd=None, maxtax=None, E0_value=None, E0_app=None,
                           E0_stable=None, Ts_add=None, smooth_time_steps =None, ground_albedo=None,
                           snow_emis=None, snow_dens_default=None, G=None):
     """
@@ -36,7 +36,7 @@ def create_dict_parameters(cal=None, hours_in_ts=4, stability=None, windHt=None,
     :param Tstart: Starting temperature (default: 0)
     :param Tadd: Temperature adjustment (default: -10000)
     :param maxtax: Maximum tax (default: 0.9)
-    :param E0: Windless exchange coefficient (default: 1)
+    :param E0_value: Windless exchange coefficient (default: 1)
     :param E0_app: Windless exchange application option (default: 1)
     :param E0_stable: Windless exchange stability option (default: 2)
     :param Ts_add: Temperature add factor (default: 2)
@@ -70,7 +70,7 @@ def create_dict_parameters(cal=None, hours_in_ts=4, stability=None, windHt=None,
         'Tstart': 0 if Tstart is None else Tstart,
         'Tadd': -10000 if Tadd is None else Tadd,
         'maxtax': 0.9 if maxtax is None else maxtax,
-        'E0_value': 1 if E0 is None else E0,
+        'E0_value': 1 if E0_value is None else E0_value,
         'E0_app': 1 if E0_app is None else E0_app,
         'E0_stable': 2 if E0_stable is None else E0_stable,
         'Ts_add': 2 if Ts_add is None else Ts_add,

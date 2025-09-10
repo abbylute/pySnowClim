@@ -116,6 +116,7 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
         input_forcings = {key: value[index, :]
                           for key, value in forcings_data['forcings'].items()}
     else:
+        # input_forcings = {key: value for key, value in forcings_data['forcings'].items()}
         input_forcings = {key: value[index, np.newaxis]
                           for key, value in forcings_data['forcings'].items()}
 
@@ -381,6 +382,7 @@ def _define_size(forcings_data):
                        forcings_data['coords']['lon'].size)
     else:
         domain_size = (1,forcings_data['coords']['lat'].size)
+        # domain_size = (forcings_data['coords']['lat'].size)
 
     return domain_size
 
@@ -404,7 +406,7 @@ def run_snowclim_model(forcings_data, parameters):
     snow_model_instances = [None] * len(forcings_data['coords']['time_sliced'])
     snowpack = Snowpack(domain_size, parameters)
 
-    for i, time_value in enumerate(tqdm(forcings_data['coords']['time_sliced'])):
+    for i, time_value in enumerate(forcings_data['coords']['time_sliced']):#tqdm(forcings_data['coords']['time_sliced'])):
         # loading necessary data to run the model
         input_forcings, snow_vars, previous_energy, precip = _process_forcings_and_energy(
             i, forcings_data, parameters, snow_model_instances)

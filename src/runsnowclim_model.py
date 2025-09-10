@@ -46,8 +46,7 @@ def _load_ncdf_file(file_path, parameters):
     Returns:
         dict: Extracted data including latitude, longitude, time, and forcings.
     """
-    ds = xr.open_dataset(file_path)#.sel(space=594)
-
+    ds = xr.open_dataset(file_path)
     if np.ndim(ds['lat'].values) > 0:
         lat = np.broadcast_to(ds['lat'].values[:, np.newaxis],
                               (len(ds['lat'].values), len(ds['lon'].values)))
@@ -227,12 +226,15 @@ def _save_variables_as_ncdf(snow_model_list, lat, lon, time, output_dir):
         da.to_netcdf(file_path)
         print(f"Saved {variable_name} to {file_path}")
 
+        # if variable_name == 'SnowWaterEq':
+            # return da
+            #da.to_netcdf(file_path)
+
 
 def run_model(forcings_path, parameters_path, outputs_path=None, save_format=None):
 
     print('Loading necessary files...')
     parameters = _load_parameter_file(parameters_path)
-    print(parameters)
     forcings_data = _load_forcing_data(forcings_path, parameters)
 
     ext = os.path.splitext(forcings_path)[-1].lower()
