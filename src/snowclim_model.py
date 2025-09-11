@@ -17,6 +17,7 @@ from SnowpackVariables import Snowpack
 
 from tqdm import tqdm
 
+
 def _prepare_outputs(model_vars, precip):
     """
     Prepare outputs by scaling model variables with appropriate constants.
@@ -129,12 +130,12 @@ def _process_forcings_and_energy(index, forcings_data, parameters,
             smoothed_energy = np.full(
                 (parameters['smooth_time_steps'], *domain_size), np.nan)
             for l in range(parameters['smooth_time_steps']):
-                smoothed_energy[l, :,:] = snow_model_instances[index - l - 1].Energy
+                smoothed_energy[l, :, :] = snow_model_instances[index - l - 1].Energy
         else:
             if index > 0:
                 smoothed_energy = np.full((index+1, *domain_size), np.nan)
                 for l in range(index):
-                    smoothed_energy[l, :,:] = snow_model_instances[l].Energy
+                    smoothed_energy[l, :, :] = snow_model_instances[l].Energy
 
     # Calculate new precipitation components
     precip = _perform_precipitation_operations(input_forcings, parameters)
@@ -160,7 +161,8 @@ def _calculate_energy_fluxes(snow_vars, parameters, input_forcings, newrain,
     """
     var_list = ['Q_sensible', 'E', 'Q_latent', 'Q_precip', 'SW_up', 'SW_down', 'LW_down',
                 'LW_up']
-    energy_var = {name: np.zeros_like(snow_vars.ExistSnow, dtype=np.float32) for name in var_list}
+    energy_var = {name: np.zeros_like(
+        snow_vars.ExistSnow, dtype=np.float32) for name in var_list}
     sec_in_ts = parameters['hours_in_ts'] * const.HR_2_SECS
 
     # --- Calculate turbulent heat fluxes (kJ/m2/timestep) ---
@@ -365,10 +367,13 @@ def _run_snowclim_step(snow_vars, snowpack, precip, input_forcings, parameters, 
                                                     0)[exist_snow]
 
         # summer boost melt for snow towers
-        if time_value[1] >= parameters['downward_radiation_start_month'] and time_value[1] <= parameters['downward_radiation_end_month']:
-            is_snow_tower = (precip.sfe + snowpack.lastswe) > parameters['max_swe_height']
+        if time_value[1] >= parameters['downward_longwave_radiation_factor_start_month'] and \
+            time_value[1] <= parameters['downward_longwave_radiation_factor_end_month']:
+            is_snow_tower = (
+                precip.sfe + snowpack.lastswe) > parameters['max_swe_height']
             if np.any(is_snow_tower):
-                input_forcings['lrad'][is_snow_tower] = input_forcings['lrad'][is_snow_tower]*parameters['downward_radiation_factor']
+                input_forcings['lrad'][is_snow_tower] = input_forcings['lrad'][is_snow_tower] * \
+                    parameters['downward_longwave_radiation_factor']
 
         lastenergy = _process_snowpack(
             input_forcings, parameters, snow_vars, precip, snowpack, coords,
@@ -388,7 +393,7 @@ def _define_size(forcings_data):
         domain_size = (forcings_data['coords']['lat'].shape[0],
                        forcings_data['coords']['lon'].size)
     else:
-        domain_size = (1,forcings_data['coords']['lat'].size)
+        domain_size = (1, forcings_data['coords']['lat'].size)
         # domain_size = (forcings_data['coords']['lat'].size)
 
     return domain_size
@@ -413,7 +418,8 @@ def run_snowclim_model(forcings_data, parameters):
     snow_model_instances = [None] * len(forcings_data['coords']['time_sliced'])
     snowpack = Snowpack(domain_size, parameters)
 
-    for i, time_value in enumerate(forcings_data['coords']['time_sliced']):#tqdm(forcings_data['coords']['time_sliced'])):
+    # tqdm(forcings_data['coords']['time_sliced'])):
+    for i, time_value in enumerate(forcings_data['coords']['time_sliced']):
         # loading necessary data to run the model
         input_forcings, snow_vars, previous_energy, precip = _process_forcings_and_energy(
             i, forcings_data, parameters, snow_model_instances)
