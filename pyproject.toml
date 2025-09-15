@@ -1,0 +1,33 @@
+# pyproject.toml
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pysnowclim"
+version = "0.1.0"
+description = "A standalone package for the pySnowclim hydrological module."
+authors = [{ name = "Abby"}, { name = "Aranildo"}, { name = "Raj"}]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "xarray",
+    "scipy",
+    "netCDF4",
+    "pandas",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "mypy"]
+
+[tool.pytest.ini_options]
+# Specifies the directory where tests are located
+pythonpath = "src"
+testpaths = "tests"
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']

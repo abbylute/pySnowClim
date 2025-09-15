@@ -1,7 +1,21 @@
 # pySnowClim
+Welcome to the `pySnowClim` repo.
 
-`pySnowClim` is a Python-based model to simulate snowpack evolution using various
-meteorological forcings. This guide will walk you through setting up and running the model.
+## What is it?
+
+`pySnowClim`  is a robust, efficient, and open-source Python implementation of
+the original SnowClim model written in MATLAB.
+`pySnowClim` addresses the practical need for a snow models that can accurately
+simulate snow accumulation and melt across both large regions and fine spatial detail.
+`pySnowClim` combines key physical processes with efficient algorithms to
+provide high-resolution snowpack estimates, especially useful in complex terrain.
+Many current snow models are either too simple, too computationally costly,
+or not easy to use with modern workflows.
+
+Users that might be interested on this package include researchers,
+hydrologists, ecologists, students, and land
+managers who need gridded information about snow for water resource
+assessments, ecological studies, and climate impact analysis.
 
 ## Requirements
 Before running pySnowClim, ensure that you have the following installed:
