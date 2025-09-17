@@ -44,23 +44,18 @@ class TestSpecificHumidity:
 class TestInclinationAngle:
     """Test solar inclination angle calculations."""
 
-    def test_inclination_angle_basic(self):
-        """Test basic inclination angle calculation."""
-        lat = 45.0    # degrees
-        month = 6     # June
-        day = 21      # Summer solstice
-
-        angle = calc_inclination_angle(lat, month, day)
-
-        assert_physical_bounds(angle, min_val=0, max_val=90,
-                             variable_name="Inclination angle")
-
     def test_inclination_angle_seasonal(self):
         """Test seasonal variation in inclination angle."""
         lat = 45.0
 
         summer_angle = calc_inclination_angle(lat, 6, 21)  # Summer solstice
         winter_angle = calc_inclination_angle(lat, 12, 21)  # Winter solstice
+
+        assert_physical_bounds(summer_angle, min_val=0, max_val=90,
+                               variable_name="Summer inclination angle")
+
+        assert_physical_bounds(winter_angle, min_val=0, max_val=90,
+                               variable_name="Winter inclination angle")
 
         assert summer_angle > winter_angle, "Summer should have higher sun angle"
 
@@ -97,7 +92,7 @@ class TestLatentHeat:
 
     def test_latent_heat_vaporization(self):
         """Test latent heat of vaporization calculation."""
-        temps = np.array([-10, 0, 10, 20])  # °C
+        temps = np.array([-15, -10, -5, 0])  # °C
 
         lh_vap = calculate_lat_heat_vap(temps)
 
@@ -105,7 +100,6 @@ class TestLatentHeat:
                              variable_name="Latent heat of vaporization")
         assert_no_nan_or_inf(lh_vap, "Latent heat vaporization")
 
-        # Should decrease with temperature
         assert np.all(np.diff(lh_vap) < 0), "Latent heat should decrease with temperature"
 
     def test_latent_heat_sublimation(self):
@@ -118,7 +112,6 @@ class TestLatentHeat:
                              variable_name="Latent heat of sublimation")
         assert_no_nan_or_inf(lh_sub, "Latent heat sublimation")
 
-        # Should be higher than vaporization
         lh_vap = calculate_lat_heat_vap(temps)
         assert np.all(lh_sub > lh_vap), "Sublimation should require more energy than vaporization"
 
@@ -130,9 +123,7 @@ class TestLatentHeat:
         lh_sub_cold = calculate_lat_heat_sub(temp_cold)
         lh_sub_warm = calculate_lat_heat_sub(temp_warm)
 
-        # Colder temperatures should have slightly higher latent heat
         assert lh_sub_cold > lh_sub_warm, "Latent heat should be higher at colder temps"
 
-        # But difference shouldn't be huge
         diff_percent = (lh_sub_cold - lh_sub_warm) / lh_sub_warm * 100
         assert diff_percent < 5, "Temperature effect should be modest (<5%)"

@@ -4,7 +4,7 @@ This directory contains example scripts and data for running the pySnowClim mode
 
 ## Files
 
-- `run_example.py` - Main example script that demonstrates how to run pySnowClim
+- `run_snowclim_example.py` - Main example script that demonstrates how to run pySnowClim
 - `forcings_example.nc` - Example forcing data (temperature, precipitation, radiation, etc.)
 - `target_example.nc` - Observed snow water equivalent data for validation
 - `output/` - Directory where model outputs and validation plots are saved

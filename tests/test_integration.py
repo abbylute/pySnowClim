@@ -23,7 +23,7 @@ class TestSingleTimestepIntegration:
             'psfc': np.full(shape, 1013.0),     # Surface pressure (hPa)
             'huss': np.full(shape, 0.008),      # Specific humidity (kg/kg)
             'relhum': np.full(shape, 80.0),     # Relative humidity (%)
-            'tdmean': np.full(shape, -5.0)      # Mean temperature (°C)
+            'tdmean': np.full(shape, -5.0)      # Dewpoint Mean temperature (°C)
         }
 
         coords = {

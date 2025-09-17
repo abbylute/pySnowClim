@@ -26,8 +26,8 @@ def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
 
     Returns:
     H: Sensible heat flux (kJ/m2/timestep)
-    E: Latent heat flux (kg/m2/timestep)
-    EV: Energy flux due to evaporation or sublimation (kJ/m2/timestep)
+    E: Mass flux due to latent heating (kg/m2/timestep)
+    EV: Latent heat flux (kJ/m2/timestep)
     """
     if not np.all(np.isclose(wind_speed, 0, atol=1e-8)):
         # Constants

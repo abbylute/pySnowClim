@@ -63,10 +63,6 @@ def run_pysnowclim_example(forcings_file, output_dir):
     output_dir : str
         Directory to save model outputs
 
-    Returns:
-    --------
-    model_output : list
-        Model output for each timestep
     """
     print("Running pySnowClim model...")
 
@@ -122,29 +118,11 @@ def compare_with_observations(model_swe, obs_ds, output_dir):
     """
     print("Comparing model results with observations...")
 
-    # Extract observed SWE (convert from mm to m if needed)
     obs_swe = obs_ds.swe.values
     obs_time = obs_ds.time.values
 
-    # Extract model SWE - take the spatial mean if there are multiple grid points
-    if model_swe.ndim > 1:
-        model_swe_values = model_swe.mean(dim=['lat', 'lon']).values
-    else:
-        model_swe_values = model_swe.values.flatten()
-
+    model_swe_values = model_swe.values.flatten()
     model_time = model_swe.time.values
-
-    # Align time series (interpolate model to observation times if needed)
-    if len(model_time) != len(obs_time):
-        print("Warning: Model and observation time series have different lengths")
-        print(f"Model timesteps: {len(model_time)}, Observation timesteps: {len(obs_time)}")
-
-        # Simple alignment - truncate to minimum length
-        min_len = min(len(model_time), len(obs_time))
-        model_swe_values = model_swe_values[:min_len]
-        obs_swe = obs_swe[:min_len]
-        model_time = model_time[:min_len]
-        obs_time = obs_time[:min_len]
 
     # Calculate statistics
     correlation = np.corrcoef(model_swe_values, obs_swe)[0, 1]
@@ -251,13 +229,8 @@ def main():
         return
 
     try:
-        # Load and validate data
         forcings_ds, obs_ds = load_and_validate_data(forcings_file, observations_file)
-
-        # Run the model
         run_pysnowclim_example(forcings_file, output_dir)
-
-        # Load model results
         model_swe = load_model_results(output_dir)
 
         if model_swe is not None:
