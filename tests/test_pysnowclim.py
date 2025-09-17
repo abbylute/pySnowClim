@@ -1,18 +1,30 @@
-# tests/test_pysnowclim.py
+"""Basic integration and package-level tests."""
 import pytest
-from snowclim_model import run_snowclim_model as sf  # Assuming functions.py is in pySnowclim
 
 def test_package_import():
     """Ensure the pySnowclim package can be imported."""
     try:
         import snowclim_model
-    except ImportError:
-        pytest.fail("Failed to import pySnowclim package.")
+        import runsnowclim_model
+        import constants
+    except ImportError as e:
+        pytest.fail(f"Failed to import pySnowclim package: {e}")
 
-# Example test for a specific function (replace with a real function)
-# def test_some_calculation():
-#     """Test a specific function within the module."""
-#     # Example data and expected results
-#     input_value = 10
-#     expected_output = 20
-#     assert sf.calculate(input_value) == expected_output, "Calculation failed."
+def test_constants_availability():
+    """Test that key constants are accessible."""
+    import constants as const
+
+    assert hasattr(const, 'WATERDENS')
+    assert const.WATERDENS == 1000
+    assert hasattr(const, 'LATHEATFREEZ')
+    assert const.LATHEATFREEZ == 333.3
+
+def test_model_run_basic_functionality():
+    """Basic test that model can be instantiated without errors."""
+    from createParameterFile import create_dict_parameters
+
+    parameters = create_dict_parameters()
+    assert isinstance(parameters, dict)
+    assert 'hours_in_ts' in parameters
+    assert 'albedo_option' in parameters
+    assert 'max_albedo' in parameters
