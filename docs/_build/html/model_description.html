@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Model Description &#8212; pySnowClim 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=fa94e195"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script>window.MathJax = {"tex": {"tags": "ams", "useLabelIds": true}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Output Variables" href="output_variables.html" />
+    <link rel="prev" title="Examples" href="examples.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="model-description">
+<h1>Model Description<a class="headerlink" href="#model-description" title="Permalink to this heading">¶</a></h1>
+<p>This section provides an overview of the physical processes and model structure implemented in pySnowClim. For detailed scientific background and validation, please refer to the original SnowClim publications.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#model-overview" id="id1">Model Overview</a></p></li>
+<li><p><a class="reference internal" href="#fundamental-physics" id="id2">Fundamental Physics</a></p>
+<ul>
+<li><p><a class="reference internal" href="#energy-balance-framework" id="id3">Energy Balance Framework</a></p></li>
+<li><p><a class="reference internal" href="#mass-balance" id="id4">Mass Balance</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#model-implementation" id="id5">Model Implementation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#core-model-engine" id="id6">Core Model Engine</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#key-model-features" id="id7">Key Model Features</a></p>
+<ul>
+<li><p><a class="reference internal" href="#albedo-parameterizations" id="id8">Albedo Parameterizations</a></p></li>
+<li><p><a class="reference internal" href="#snow-density-evolution" id="id9">Snow Density Evolution</a></p></li>
+<li><p><a class="reference internal" href="#advanced-energy-balance" id="id10">Advanced Energy Balance</a></p></li>
+<li><p><a class="reference internal" href="#liquid-water-processes" id="id11">Liquid Water Processes</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#model-validation-and-applications" id="id12">Model Validation and Applications</a></p>
+<ul>
+<li><p><a class="reference internal" href="#scientific-basis" id="id13">Scientific Basis</a></p></li>
+<li><p><a class="reference internal" href="#appropriate-applications" id="id14">Appropriate Applications</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#model-limitations" id="id15">Model Limitations</a></p></li>
+</ul>
+</nav>
+<section id="model-overview">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Model Overview</a><a class="headerlink" href="#model-overview" title="Permalink to this heading">¶</a></h2>
+<p>pySnowClim is a physically-based energy balance snow model that simulates snow accumulation, metamorphism, and ablation processes. The model is implemented as a Python translation of the original SnowClim model, maintaining the same core physics while providing improved computational efficiency and modern data handling capabilities.</p>
+<p><strong>Core Model Philosophy:</strong></p>
+<p>The model operates on the principle that snow evolution is fundamentally controlled by energy exchanges at the snow surface. All physical processes (melting, sublimation, refreezing, densification) are driven by the surface energy balance, making the model suitable for a wide range of climatic conditions and applications.</p>
+<p><strong>Model Structure:</strong></p>
+<p>pySnowClim consists of three main components:</p>
+<ol class="arabic simple">
+<li><p><strong>Model Engine</strong> (<code class="docutils literal notranslate"><span class="pre">snowclim_model.py</span></code>): Core physics calculations and timestep processing</p></li>
+<li><p><strong>Model Runner</strong> (<code class="docutils literal notranslate"><span class="pre">runsnowclim_model.py</span></code>): Data management, I/O operations, and model coordination</p></li>
+<li><p><strong>Command Interface</strong> (<code class="docutils literal notranslate"><span class="pre">run_main.py</span></code>): Command-line interface for operational use</p></li>
+</ol>
+</section>
+<section id="fundamental-physics">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Fundamental Physics</a><a class="headerlink" href="#fundamental-physics" title="Permalink to this heading">¶</a></h2>
+<section id="energy-balance-framework">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Energy Balance Framework</a><a class="headerlink" href="#energy-balance-framework" title="Permalink to this heading">¶</a></h3>
+<p>The model is built around the surface energy balance equation:</p>
+<div class="math notranslate nohighlight">
+\[Q_{net} = SW_{in} - SW_{out} + LW_{in} - LW_{out} + H + LE + G + Q_p\]</div>
+<p>Where:
+- <span class="math notranslate nohighlight">\(SW\)</span> = shortwave radiation fluxes
+- <span class="math notranslate nohighlight">\(LW\)</span> = longwave radiation fluxes
+- <span class="math notranslate nohighlight">\(H\)</span> = sensible heat flux
+- <span class="math notranslate nohighlight">\(LE\)</span> = latent heat flux
+- <span class="math notranslate nohighlight">\(G\)</span> = ground heat flux
+- <span class="math notranslate nohighlight">\(Q_p\)</span> = precipitation heat flux</p>
+<p>The net energy (<span class="math notranslate nohighlight">\(Q_{net}\)</span>) is then distributed among competing physical processes in order of priority.</p>
+</section>
+<section id="mass-balance">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Mass Balance</a><a class="headerlink" href="#mass-balance" title="Permalink to this heading">¶</a></h3>
+<p>Snow mass changes are governed by:</p>
+<div class="math notranslate nohighlight">
+\[\frac{dSWE}{dt} = Snowfall - Melt - Sublimation + Refreezing\]</div>
+<p>Where all terms are in water equivalent units (mm/timestep).</p>
+</section>
+</section>
+<section id="model-implementation">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Model Implementation</a><a class="headerlink" href="#model-implementation" title="Permalink to this heading">¶</a></h2>
+<section id="core-model-engine">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Core Model Engine</a><a class="headerlink" href="#core-model-engine" title="Permalink to this heading">¶</a></h3>
+<p><strong>File</strong>: <code class="docutils literal notranslate"><span class="pre">snowclim_model.py</span></code></p>
+<p>The main model engine implements the physics through the <code class="docutils literal notranslate"><span class="pre">run_snowclim_model()</span></code> function, which processes each timestep through several phases:</p>
+<p><strong>1. Precipitation Processing</strong></p>
+<p>Determines rain/snow partitioning using temperature and humidity:</p>
+<ul class="simple">
+<li><p>Logistic regression model separates rain from snow</p></li>
+<li><p>Fresh snow density calculated from air temperature</p></li>
+<li><p>New snow temperature and cold content computed</p></li>
+</ul>
+<p><strong>2. Energy Balance Calculation</strong></p>
+<p>Computes all surface energy flux components:</p>
+<ul class="simple">
+<li><p>Shortwave radiation (accounting for albedo)</p></li>
+<li><p>Longwave radiation (Stefan-Boltzmann law)</p></li>
+<li><p>Turbulent fluxes (bulk aerodynamic formulas)</p></li>
+<li><p>Ground heat flux (constant value)</p></li>
+<li><p>Precipitation heat flux</p></li>
+</ul>
+<p><strong>3. Energy Distribution</strong></p>
+<p>Available energy is allocated sequentially:</p>
+<ul class="simple">
+<li><p><strong>Cold Content</strong>: Energy to warm snowpack to 0°C (first priority)</p></li>
+<li><p><strong>Refreezing</strong>: Energy to refreeze liquid water (second priority)</p></li>
+<li><p><strong>Melting</strong>: Energy to melt snow/ice (third priority)</p></li>
+<li><p><strong>Sublimation</strong>: Mass exchange with atmosphere</p></li>
+</ul>
+<p><strong>4. State Updates</strong></p>
+<p>Physical properties are updated:</p>
+<ul class="simple">
+<li><p>Snow density evolution through compaction</p></li>
+<li><p>Liquid water content and drainage</p></li>
+<li><p>Surface albedo changes</p></li>
+<li><p>Internal snowpack temperature</p></li>
+</ul>
+</section>
+</section>
+<section id="key-model-features">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Key Model Features</a><a class="headerlink" href="#key-model-features" title="Permalink to this heading">¶</a></h2>
+<section id="albedo-parameterizations">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Albedo Parameterizations</a><a class="headerlink" href="#albedo-parameterizations" title="Permalink to this heading">¶</a></h3>
+<p>Three albedo options accommodate different applications:</p>
+<ul class="simple">
+<li><p><strong>Option 1</strong>: Essery et al. (2013)</p></li>
+<li><p><strong>Option 2</strong>: Tarboton (Utah)</p></li>
+<li><p><strong>Option 3</strong>: VIC model</p></li>
+</ul>
+</section>
+<section id="snow-density-evolution">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Snow Density Evolution</a><a class="headerlink" href="#snow-density-evolution" title="Permalink to this heading">¶</a></h3>
+<p>Realistic density changes through:</p>
+<ul class="simple">
+<li><p>Fresh snow density as function of temperature</p></li>
+<li><p>Compaction based on overburden pressure and temperature</p></li>
+<li><p>Density updates after new snowfall events</p></li>
+</ul>
+</section>
+<section id="advanced-energy-balance">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Advanced Energy Balance</a><a class="headerlink" href="#advanced-energy-balance" title="Permalink to this heading">¶</a></h3>
+<p>Sophisticated energy processing includes:</p>
+<ul class="simple">
+<li><p>Atmospheric stability corrections for turbulent fluxes</p></li>
+<li><p>Energy smoothing to reduce numerical instabilities</p></li>
+<li><p>&quot;Cold content tax&quot; system for improved convergence</p></li>
+<li><p>Multiple measurement height corrections</p></li>
+</ul>
+</section>
+<section id="liquid-water-processes">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Liquid Water Processes</a><a class="headerlink" href="#liquid-water-processes" title="Permalink to this heading">¶</a></h3>
+<p>Comprehensive liquid water handling:</p>
+<ul class="simple">
+<li><p>Rain-on-snow events</p></li>
+<li><p>Internal liquid water storage and drainage</p></li>
+<li><p>Refreezing when snowpack has cold content</p></li>
+<li><p>Runoff generation with realistic drainage rates</p></li>
+</ul>
+</section>
+</section>
+<section id="model-validation-and-applications">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Model Validation and Applications</a><a class="headerlink" href="#model-validation-and-applications" title="Permalink to this heading">¶</a></h2>
+<section id="scientific-basis">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Scientific Basis</a><a class="headerlink" href="#scientific-basis" title="Permalink to this heading">¶</a></h3>
+<p>pySnowClim physics are based on established snow science literature:</p>
+<ul class="simple">
+<li><p>Energy balance formulations from classical snow physics texts</p></li>
+<li><p>Parameterizations from peer-reviewed publications</p></li>
+<li><p>Validation against field observations and other snow models</p></li>
+<li><p>Calibration using SNOTEL network data across western United States</p></li>
+</ul>
+</section>
+<section id="appropriate-applications">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Appropriate Applications</a><a class="headerlink" href="#appropriate-applications" title="Permalink to this heading">¶</a></h3>
+<p>The model is suitable for:</p>
+<ul class="simple">
+<li><p><strong>Research</strong>: Detailed energy balance studies and process investigations</p></li>
+<li><p><strong>Operations</strong>: Water resource forecasting and management</p></li>
+<li><p><strong>Education</strong>: Teaching snow physics and energy balance concepts</p></li>
+<li><p><strong>Climate Studies</strong>: Long-term snow evolution under changing conditions</p></li>
+<li><p><strong>Spatial Scales</strong>: Point locations to continental domains</p></li>
+<li><p><strong>Temporal Scales</strong>: Sub-daily to multi-decadal simulations</p></li>
+<li><p><strong>Environments</strong>: All snow climates from maritime to continental</p></li>
+</ul>
+</section>
+</section>
+<section id="model-limitations">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Model Limitations</a><a class="headerlink" href="#model-limitations" title="Permalink to this heading">¶</a></h2>
+<p><strong>Physical Limitations</strong>:</p>
+<ul class="simple">
+<li><p>Single-layer snowpack (no internal temperature gradients)</p></li>
+<li><p>No explicit snow grain evolution or metamorphism</p></li>
+<li><p>Simplified treatment of snow-vegetation interactions</p></li>
+<li><p>Ground heat flux assumed constant</p></li>
+</ul>
+<p><strong>Technical Limitations</strong>:</p>
+<ul class="simple">
+<li><p>Requires complete meteorological forcing datasets</p></li>
+<li><p>No built-in downscaling or gap-filling capabilities</p></li>
+<li><p>Output storage can be large for long simulations over large domains</p></li>
+</ul>
+<p>For comprehensive scientific documentation, algorithm details, and validation results, please refer to the original SnowClim publications.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pySnowClim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model Description</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#model-overview">Model Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fundamental-physics">Fundamental Physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-implementation">Model Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#key-model-features">Key Model Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-validation-and-applications">Model Validation and Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-limitations">Model Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="output_variables.html">Output Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to pySnowClim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="examples.html" title="previous chapter">Examples</a></li>
+      <li>Next: <a href="output_variables.html" title="next chapter">Output Variables</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Abby Lute, Aranildo Lima, Rajesh Shrestha.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/model_description.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
