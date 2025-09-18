@@ -1,5 +1,5 @@
 """
-Calculates the solar inclination angle as a function of latitude and time of year.
+Calculates the solar zenith angle as a function of latitude and time of year, assuming time is solar noon.
 """
 
 import numpy as np
@@ -7,7 +7,7 @@ from datetime import datetime
 
 def calc_inclination_angle(lat, month, day=15):
     """
-    Calculate the solar inclination angle based on latitude and date.
+    Calculate the solar zenith angle based on latitude and date assuming time is solar noon.
 
     Parameters:
     -----------
@@ -17,7 +17,7 @@ def calc_inclination_angle(lat, month, day=15):
 
     Returns:
     --------
-    - incangle: Solar inclination angle in degrees.
+    - incangle: Solar zenith angle in degrees.
     """
 
     # Calculate day of the year (doy)
@@ -32,5 +32,8 @@ def calc_inclination_angle(lat, month, day=15):
 
     # Solar inclination angle
     incangle = 90 - np.abs(lat - decl_angle)
+
+    # Negative values are reset to 0° since this indicates nighttime/no sun
+    incangle = np.maximum(0, incangle)
 
     return incangle
