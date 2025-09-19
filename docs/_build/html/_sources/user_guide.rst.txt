@@ -3,12 +3,8 @@ User Guide
 
 This comprehensive guide covers all aspects of using pySnowClim for snow modeling applications.
 
-.. contents::
-   :local:
-   :depth: 2
-
 Getting Started
---------------
+---------------
 
 pySnowClim provides two main ways to run snow simulations:
 
@@ -71,10 +67,10 @@ The forcing data should be organized as a NetCDF file with dimensions:
 - ``lon``: Longitude dimension
 
 Model Configuration
-------------------
+-------------------
 
 Parameter Management
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 pySnowClim uses a comprehensive parameter system that controls model physics and behavior. Parameters can be customized or use scientifically validated defaults.
 
@@ -139,10 +135,10 @@ pySnowClim uses a comprehensive parameter system that controls model physics and
 - ``z_0``, ``z_h``: Surface roughness lengths (m)
 
 Running Simulations
-------------------
+-------------------
 
 Python API Usage
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 The primary interface for programmatic use:
 
@@ -163,7 +159,7 @@ The primary interface for programmatic use:
 
 
 Command Line Usage
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 For operational use and batch processing:
 
@@ -211,7 +207,7 @@ Model Outputs
 -------------
 
 Output Variables
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 pySnowClim generates comprehensive outputs covering snow state, energy fluxes, and surface properties:
 
@@ -251,7 +247,7 @@ pySnowClim generates comprehensive outputs covering snow state, energy fluxes, a
 - ``PackCC``: Snowpack cold content (kJ/m²)
 
 Output Formats
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 **NetCDF Format (Recommended):**
 
@@ -266,7 +262,7 @@ Best Practices
 --------------
 
 Data Preparation
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 1. **Quality Control**: Ensure forcing data has no missing values or unrealistic extremes
 2. **Temporal Consistency**: Use consistent timesteps throughout the simulation
@@ -274,7 +270,7 @@ Data Preparation
 4. **Units**: Verify all variables use the expected units (see requirements table)
 
 Parameter Selection
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 1. **Default Parameters**: Start with defaults, which are calibrated for Western US conditions
 2. **Regional Tuning**: Adjust key parameters based on local climate and snow conditions
@@ -282,7 +278,7 @@ Parameter Selection
 4. **Documentation**: Keep detailed records of parameter choices and justifications
 
 Performance Optimization
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. **Timestep Selection**: Use daily timesteps unless sub-daily processes are critical
 2. **Domain Size**: Balance spatial detail with computational requirements
@@ -290,10 +286,10 @@ Performance Optimization
 4. **Output Management**: Save only needed variables to reduce storage requirements
 
 Troubleshooting
---------------
+---------------
 
 Common Issues and Solutions
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Installation Problems:**
 

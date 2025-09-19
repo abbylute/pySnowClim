@@ -3,10 +3,6 @@ Examples
 
 This section demonstrates how to run the provided pySnowClim example and what results to expect.
 
-.. contents::
-   :local:
-   :depth: 2
-
 Running the Example Script
 --------------------------
 
@@ -28,7 +24,7 @@ Before running the example, ensure these files are in the `examples/` directory:
 - ``forcings_example.nc`` - Meteorological forcing data
 - ``target_example.nc`` - Observed snow water equivalent for validation
 
-The forcing file should contain the following variables:
+The forcing file contains the following variables:
 
 .. list-table::
    :widths: 20 20 60
@@ -65,7 +61,7 @@ The forcing file should contain the following variables:
      - °C
      - Dewpoint temperature
 
-The observation file should contain:
+The observation file contains:
 
 - ``swe`` - Observed snow water equivalent (mm)
 - ``time`` - Time coordinate matching the forcing data period
@@ -81,12 +77,6 @@ Running the Example
    cd examples
    python run_snowclim_example.py
 
-**Alternative Method:**
-
-.. code-block:: bash
-
-   # From project root directory
-   python examples/run_snowclim_example.py
 
 **Expected Console Output:**
 
@@ -122,7 +112,7 @@ Running the Example
    Results saved in: examples/output
 
 Expected Results
----------------
+----------------
 
 Output Files
 ~~~~~~~~~~~~

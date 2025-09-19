@@ -10,7 +10,7 @@ pySnowClim Documentation
    :alt: License
 
 Welcome to pySnowClim, a robust, efficient, and open-source Python implementation
-of the SnowClim snow climate model. This package provides tools for simulating
+of the SnowClim model. This package provides tools for simulating
 snow accumulation, melting, sublimation, and energy balance processes across
 various spatial and temporal scales.
 
@@ -18,7 +18,6 @@ various spatial and temporal scales.
    :maxdepth: 2
    :caption: Contents:
 
-   introduction
    installation
    quick_start
    user_guide
@@ -37,6 +36,7 @@ simulate snow accumulation and melt across both large regions and fine spatial d
 The model combines key physical processes with efficient algorithms to provide
 high-resolution snowpack estimates, especially useful in complex terrain.
 
+
 Key Features
 -----------
 
@@ -46,6 +46,7 @@ Key Features
 * **Flexible Input/Output**: Support for NetCDF and NumPy array formats
 * **Efficient**: Vectorized operations for processing multiple grid points simultaneously
 * **Open Source**: MIT licensed for academic and commercial use
+
 
 Quick Navigation
 ---------------

@@ -3,15 +3,12 @@ Contributing to pySnowClim
 
 We welcome contributions to pySnowClim! This document provides guidelines for contributing code, documentation, bug reports, and feature requests.
 
-.. contents::
-   :local:
-   :depth: 2
 
 Getting Started
---------------
+---------------
 
 Types of Contributions
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 We welcome several types of contributions:
 
@@ -23,7 +20,7 @@ We welcome several types of contributions:
 - **Scientific Validation**: Compare against observations or other models
 
 Prerequisites
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 Before contributing, please:
 
@@ -33,10 +30,10 @@ Before contributing, please:
 4. **Set up a development environment** as described below
 
 Development Setup
-----------------
+-----------------
 
 Environment Setup
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 1. **Fork and Clone the Repository**:
 
@@ -68,7 +65,7 @@ Environment Setup
    python run_main.py
 
 Code Standards
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 **Python Style:**
 
@@ -93,7 +90,7 @@ Code Standards
 
 
 Getting Help
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 If you need help contributing:
 

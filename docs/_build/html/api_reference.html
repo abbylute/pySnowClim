@@ -36,9 +36,9 @@
 <p>This page provides detailed documentation for the main pySnowClim modules and functions.</p>
 <section id="core-model-functions">
 <h2>Core Model Functions<a class="headerlink" href="#core-model-functions" title="Permalink to this heading">¶</a></h2>
-<section id="main-model-runner">
-<h3>Main Model Runner<a class="headerlink" href="#main-model-runner" title="Permalink to this heading">¶</a></h3>
-<span class="target" id="module-runsnowclim_model"></span><dl class="simple">
+<section id="module-runsnowclim_model">
+<span id="main-model-runner"></span><h3>Main Model Runner<a class="headerlink" href="#module-runsnowclim_model" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
 <dt>This script runs the SnowClim Model. It:</dt><dd><ul class="simple">
 <li><p>Sets default parameter values</p></li>
 <li><p>Imports example forcing data</p></li>
@@ -81,9 +81,9 @@ over a given time period based on meteorological inputs.</p>
 <p>The core snow climate model that performs the physics calculations and timestep iterations.</p>
 </section>
 </section>
-<section id="parameter-configuration">
-<h2>Parameter Configuration<a class="headerlink" href="#parameter-configuration" title="Permalink to this heading">¶</a></h2>
-<span class="target" id="module-createParameterFile"></span><p>This script creates and saves a dictionary of parameters for a snow model to read.
+<section id="module-createParameterFile">
+<span id="parameter-configuration"></span><h2>Parameter Configuration<a class="headerlink" href="#module-createParameterFile" title="Permalink to this heading">¶</a></h2>
+<p>This script creates and saves a dictionary of parameters for a snow model to read.
 Default values are based on the application of the snow model to the western United States.
 The parameters include settings for albedo, stability, snow density, and other
 model configurations.</p>
@@ -375,27 +375,6 @@ typically 1000 for fresh water.</p></li>
 
 </section>
 </section>
-<section id="module-constants">
-<span id="constants-and-configuration"></span><h2>Constants and Configuration<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
-<p>Script which contains all the constants being used by SnowClim.</p>
-<p>Physical constants used throughout the model calculations.</p>
-</section>
-<section id="command-line-interface">
-<h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this heading">¶</a></h2>
-<p>The model can be run from the command line using the main script:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_main.py<span class="w"> </span><span class="o">[</span>forcings_path<span class="o">]</span><span class="w"> </span><span class="o">[</span>output_path<span class="o">]</span><span class="w"> </span><span class="o">[</span>parameters_path<span class="o">]</span><span class="w"> </span><span class="o">[</span>save_format<span class="o">]</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Arguments:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">forcings_path</span></code>: Path to forcing data file or directory (default: 'data/')</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_path</span></code>: Directory to save model outputs (default: 'outputs/')</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">parameters_path</span></code>: Path to parameters JSON file (default: None, uses defaults)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">save_format</span></code>: Output format '.nc' or '.npy' (default: None, uses .npy)</p></li>
-</ul>
-</dd>
-</dl>
-</section>
 </section>
 
 
@@ -422,10 +401,8 @@ typically 1000 for fresh water.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#core-model-functions">Core Model Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#parameter-configuration">Parameter Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-createParameterFile">Parameter Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#data-structures">Data Structures</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-constants">Constants and Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#command-line-interface">Command Line Interface</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>

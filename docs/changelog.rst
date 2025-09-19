@@ -148,4 +148,4 @@ Initial Release
 
 This Python implementation builds upon the original SnowClim model and acknowledges the contributions of the broader snow modeling community, including field data providers, algorithm developers, and validation researchers.
 
-For detailed technical information about model physics and implementation, please refer to the original SnowClim publications and the comprehensive model documentation.
+For detailed technical information about model physics and implementation, please refer to the original SnowClim publication `(Lute et al., 2022) <https://doi.org/10.5194/gmd-15-5045-2022>`_  and the comprehensive model documentation.

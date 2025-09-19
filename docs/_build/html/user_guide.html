@@ -34,47 +34,8 @@
   <section id="user-guide">
 <h1>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this heading">¶</a></h1>
 <p>This comprehensive guide covers all aspects of using pySnowClim for snow modeling applications.</p>
-<nav class="contents local" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#getting-started" id="id1">Getting Started</a></p></li>
-<li><p><a class="reference internal" href="#input-data-requirements" id="id2">Input Data Requirements</a></p>
-<ul>
-<li><p><a class="reference internal" href="#meteorological-forcing-data" id="id3">Meteorological Forcing Data</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#model-configuration" id="id4">Model Configuration</a></p>
-<ul>
-<li><p><a class="reference internal" href="#parameter-management" id="id5">Parameter Management</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#running-simulations" id="id6">Running Simulations</a></p>
-<ul>
-<li><p><a class="reference internal" href="#python-api-usage" id="id7">Python API Usage</a></p></li>
-<li><p><a class="reference internal" href="#command-line-usage" id="id8">Command Line Usage</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#model-outputs" id="id9">Model Outputs</a></p>
-<ul>
-<li><p><a class="reference internal" href="#output-variables" id="id10">Output Variables</a></p></li>
-<li><p><a class="reference internal" href="#output-formats" id="id11">Output Formats</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#best-practices" id="id12">Best Practices</a></p>
-<ul>
-<li><p><a class="reference internal" href="#data-preparation" id="id13">Data Preparation</a></p></li>
-<li><p><a class="reference internal" href="#parameter-selection" id="id14">Parameter Selection</a></p></li>
-<li><p><a class="reference internal" href="#performance-optimization" id="id15">Performance Optimization</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#troubleshooting" id="id16">Troubleshooting</a></p>
-<ul>
-<li><p><a class="reference internal" href="#common-issues-and-solutions" id="id17">Common Issues and Solutions</a></p></li>
-</ul>
-</li>
-</ul>
-</nav>
 <section id="getting-started">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Getting Started</a><a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
 <p>pySnowClim provides two main ways to run snow simulations:</p>
 <ol class="arabic simple">
 <li><p><strong>Python API</strong>: Use the <code class="docutils literal notranslate"><span class="pre">run_model</span></code> function directly in Python scripts</p></li>
@@ -83,9 +44,9 @@
 <p>Both approaches require meteorological forcing data and optionally accept custom parameter configurations.</p>
 </section>
 <section id="input-data-requirements">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Input Data Requirements</a><a class="headerlink" href="#input-data-requirements" title="Permalink to this heading">¶</a></h2>
+<h2>Input Data Requirements<a class="headerlink" href="#input-data-requirements" title="Permalink to this heading">¶</a></h2>
 <section id="meteorological-forcing-data">
-<h3><a class="toc-backref" href="#id3" role="doc-backlink">Meteorological Forcing Data</a><a class="headerlink" href="#meteorological-forcing-data" title="Permalink to this heading">¶</a></h3>
+<h3>Meteorological Forcing Data<a class="headerlink" href="#meteorological-forcing-data" title="Permalink to this heading">¶</a></h3>
 <p>pySnowClim requires time series of meteorological variables. The model accepts data in NetCDF format or legacy MATLAB .mat files.</p>
 <p><strong>Required Variables:</strong></p>
 <table class="docutils align-default">
@@ -149,9 +110,9 @@
 </section>
 </section>
 <section id="model-configuration">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Model Configuration</a><a class="headerlink" href="#model-configuration" title="Permalink to this heading">¶</a></h2>
+<h2>Model Configuration<a class="headerlink" href="#model-configuration" title="Permalink to this heading">¶</a></h2>
 <section id="parameter-management">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">Parameter Management</a><a class="headerlink" href="#parameter-management" title="Permalink to this heading">¶</a></h3>
+<h3>Parameter Management<a class="headerlink" href="#parameter-management" title="Permalink to this heading">¶</a></h3>
 <p>pySnowClim uses a comprehensive parameter system that controls model physics and behavior. Parameters can be customized or use scientifically validated defaults.</p>
 <p><strong>Creating Parameter Files:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">src.createParameterFile</span> <span class="kn">import</span> <span class="n">create_dict_parameters</span>
@@ -213,9 +174,9 @@
 </section>
 </section>
 <section id="running-simulations">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Running Simulations</a><a class="headerlink" href="#running-simulations" title="Permalink to this heading">¶</a></h2>
+<h2>Running Simulations<a class="headerlink" href="#running-simulations" title="Permalink to this heading">¶</a></h2>
 <section id="python-api-usage">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Python API Usage</a><a class="headerlink" href="#python-api-usage" title="Permalink to this heading">¶</a></h3>
+<h3>Python API Usage<a class="headerlink" href="#python-api-usage" title="Permalink to this heading">¶</a></h3>
 <p>The primary interface for programmatic use:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">src.runsnowclim_model</span> <span class="kn">import</span> <span class="n">run_model</span>
 
@@ -233,7 +194,7 @@
 </div>
 </section>
 <section id="command-line-usage">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">Command Line Usage</a><a class="headerlink" href="#command-line-usage" title="Permalink to this heading">¶</a></h3>
+<h3>Command Line Usage<a class="headerlink" href="#command-line-usage" title="Permalink to this heading">¶</a></h3>
 <p>For operational use and batch processing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic usage - uses all defaults</span>
 python<span class="w"> </span>run_main.py
@@ -281,9 +242,9 @@ python<span class="w"> </span>run_main.py<span class="w"> </span>data/<span clas
 </section>
 </section>
 <section id="model-outputs">
-<h2><a class="toc-backref" href="#id9" role="doc-backlink">Model Outputs</a><a class="headerlink" href="#model-outputs" title="Permalink to this heading">¶</a></h2>
+<h2>Model Outputs<a class="headerlink" href="#model-outputs" title="Permalink to this heading">¶</a></h2>
 <section id="output-variables">
-<h3><a class="toc-backref" href="#id10" role="doc-backlink">Output Variables</a><a class="headerlink" href="#output-variables" title="Permalink to this heading">¶</a></h3>
+<h3>Output Variables<a class="headerlink" href="#output-variables" title="Permalink to this heading">¶</a></h3>
 <p>pySnowClim generates comprehensive outputs covering snow state, energy fluxes, and surface properties:</p>
 <p><strong>Snow State Variables:</strong></p>
 <ul class="simple">
@@ -322,7 +283,7 @@ python<span class="w"> </span>run_main.py<span class="w"> </span>data/<span clas
 </ul>
 </section>
 <section id="output-formats">
-<h3><a class="toc-backref" href="#id11" role="doc-backlink">Output Formats</a><a class="headerlink" href="#output-formats" title="Permalink to this heading">¶</a></h3>
+<h3>Output Formats<a class="headerlink" href="#output-formats" title="Permalink to this heading">¶</a></h3>
 <p><strong>NetCDF Format (Recommended):</strong></p>
 <p>Each variable is saved as a separate NetCDF file with full metadata.</p>
 <p><strong>NumPy Format:</strong></p>
@@ -330,9 +291,9 @@ python<span class="w"> </span>run_main.py<span class="w"> </span>data/<span clas
 </section>
 </section>
 <section id="best-practices">
-<h2><a class="toc-backref" href="#id12" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Permalink to this heading">¶</a></h2>
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Permalink to this heading">¶</a></h2>
 <section id="data-preparation">
-<h3><a class="toc-backref" href="#id13" role="doc-backlink">Data Preparation</a><a class="headerlink" href="#data-preparation" title="Permalink to this heading">¶</a></h3>
+<h3>Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p><strong>Quality Control</strong>: Ensure forcing data has no missing values or unrealistic extremes</p></li>
 <li><p><strong>Temporal Consistency</strong>: Use consistent timesteps throughout the simulation</p></li>
@@ -341,7 +302,7 @@ python<span class="w"> </span>run_main.py<span class="w"> </span>data/<span clas
 </ol>
 </section>
 <section id="parameter-selection">
-<h3><a class="toc-backref" href="#id14" role="doc-backlink">Parameter Selection</a><a class="headerlink" href="#parameter-selection" title="Permalink to this heading">¶</a></h3>
+<h3>Parameter Selection<a class="headerlink" href="#parameter-selection" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p><strong>Default Parameters</strong>: Start with defaults, which are calibrated for Western US conditions</p></li>
 <li><p><strong>Regional Tuning</strong>: Adjust key parameters based on local climate and snow conditions</p></li>
@@ -350,7 +311,7 @@ python<span class="w"> </span>run_main.py<span class="w"> </span>data/<span clas
 </ol>
 </section>
 <section id="performance-optimization">
-<h3><a class="toc-backref" href="#id15" role="doc-backlink">Performance Optimization</a><a class="headerlink" href="#performance-optimization" title="Permalink to this heading">¶</a></h3>
+<h3>Performance Optimization<a class="headerlink" href="#performance-optimization" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p><strong>Timestep Selection</strong>: Use daily timesteps unless sub-daily processes are critical</p></li>
 <li><p><strong>Domain Size</strong>: Balance spatial detail with computational requirements</p></li>
@@ -360,9 +321,9 @@ python<span class="w"> </span>run_main.py<span class="w"> </span>data/<span clas
 </section>
 </section>
 <section id="troubleshooting">
-<h2><a class="toc-backref" href="#id16" role="doc-backlink">Troubleshooting</a><a class="headerlink" href="#troubleshooting" title="Permalink to this heading">¶</a></h2>
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading">¶</a></h2>
 <section id="common-issues-and-solutions">
-<h3><a class="toc-backref" href="#id17" role="doc-backlink">Common Issues and Solutions</a><a class="headerlink" href="#common-issues-and-solutions" title="Permalink to this heading">¶</a></h3>
+<h3>Common Issues and Solutions<a class="headerlink" href="#common-issues-and-solutions" title="Permalink to this heading">¶</a></h3>
 <p><strong>Installation Problems:</strong></p>
 <ul class="simple">
 <li><p>Verify Python version (3.8+) and required packages</p></li>
