@@ -15,9 +15,6 @@ from SnowModelVariables import SnowModelVariables
 from PrecipitationProperties import PrecipitationProperties
 from SnowpackVariables import Snowpack
 
-from tqdm import tqdm
-
-
 def _prepare_outputs(model_vars, precip):
     """
     Prepare outputs by scaling model variables with appropriate constants.
@@ -418,7 +415,6 @@ def run_snowclim_model(forcings_data, parameters):
     snow_model_instances = [None] * len(forcings_data['coords']['time_sliced'])
     snowpack = Snowpack(domain_size, parameters)
 
-    # tqdm(forcings_data['coords']['time_sliced'])):
     for i, time_value in enumerate(forcings_data['coords']['time_sliced']):
         # loading necessary data to run the model
         input_forcings, snow_vars, previous_energy, precip = _process_forcings_and_energy(
