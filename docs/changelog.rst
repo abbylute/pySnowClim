@@ -104,21 +104,14 @@ Initial Release
 - Unit tests for individual physics functions
 - Integration tests for complete model workflows
 
-**Known Limitations**
-
-*Physical Model:*
-
-- Single-layer snowpack assumption (no internal temperature profile)
-- Vegetation not included
-- Constant ground heat flux assumption
-- No explicit snow grain size evolution
-
 *Technical Constraints:*
 
 - Requires complete meteorological forcing datasets
-- No built-in spatial downscaling capabilities
+- No built-in spatial downscaling or gap-filling capabilities
 - Memory usage scales with domain size and output retention
 - Limited parallel processing optimization in initial release
+- Output storage can be large for long simulations over large domains
+
 
 **Migration Notes**
 

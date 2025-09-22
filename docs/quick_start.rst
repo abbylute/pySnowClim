@@ -22,7 +22,7 @@ The forcing data should contain these variables:
 * ``lrad`` - Longwave radiation (kJ/m²/timestep)
 * ``solar`` - Solar radiation (kJ/m²/timestep)
 * ``tavg`` - Air temperature (°C)
-* ``ppt`` - Precipitation (mm/timestep)
+* ``ppt`` - Precipitation (m/timestep)
 * ``vs`` - Wind speed (m/s)
 * ``psfc`` - Surface pressure (hPa)
 * ``huss`` - Specific humidity (kg/kg)

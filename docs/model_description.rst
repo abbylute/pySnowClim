@@ -1,21 +1,21 @@
 Model Description
 =================
 
-This section provides an overview of the physical processes and model structure implemented in pySnowClim. 
+This section provides an overview of the physical processes and model structure implemented in pySnowClim.
 
 Model Overview
 --------------
 
-pySnowClim is a physically-based energy balance snow model that simulates snow accumulation and melt. 
+pySnowClim is a physically-based energy balance snow model that simulates snow accumulation and melt.
 The model is implemented as a Python translation of the original SnowClim model written in MATLAB
-`(Lute et al., 2022) <https://doi.org/10.5194/gmd-15-5045-2022>`_ , 
-maintaining the same core physics while providing improved 
+`(Lute et al., 2022) <https://doi.org/10.5194/gmd-15-5045-2022>`_ ,
+maintaining the same core physics while providing improved
 computational efficiency and modern data handling capabilities.
 
 **Core Model Philosophy:**
 
-The model operates on the principle that snow evolution is fundamentally controlled by energy exchanges at the snow surface. 
-All physical processes (melting, sublimation, refreezing, densification) are driven by the surface energy balance, 
+The model operates on the principle that snow evolution is fundamentally controlled by energy exchanges at the snow surface.
+All physical processes (melting, sublimation, refreezing, densification) are driven by the surface energy balance,
 making the model suitable for a wide range of climatic conditions and applications.
 
 **Model Structure:**
@@ -64,12 +64,12 @@ Mass balance of the solid :math:`(M_{s})` and liquid :math:`(M_{l})` portions of
 Where:
 
 - :math:`M_{snow}` = mass of new snowfall
-- :math:`M_{ref}` = mass of the snopack liquid water that has been refrozen
+- :math:`M_{ref}` = mass of the snowpack liquid water that has been refrozen
 - :math:`M_{melt}` = mass of snow that has melted
 - :math:`M_{dep}` = mass of deposition
 - :math:`M_{sub}` = mass of sublimation
-- :math:`M_{rain}` = mass of rain added to the snopack
-- :math:`M_{runoff}` = mass of liquid water that has left the snopack as runoff
+- :math:`M_{rain}` = mass of rain added to the snowpack
+- :math:`M_{runoff}` = mass of liquid water that has left the snowpack as runoff
 - :math:`M_{cond}` = mass of condensation
 - :math:`M_{evap}` = mass of evaporation
 
@@ -105,9 +105,9 @@ Computes all surface energy flux components:
 
 Available energy is allocated sequentially:
 
-- **Cold Content**: Energy to warm snowpack to 0°C 
-- **Refreezing**: Energy to refreeze liquid water 
-- **Melting**: Energy to melt snow/ice 
+- **Cold Content**: Energy to warm snowpack to 0°C
+- **Refreezing**: Energy to refreeze liquid water
+- **Melting**: Energy to melt snow/ice
 - **Sublimation**: Mass exchange with atmosphere
 
 **4. State Updates**
@@ -128,9 +128,9 @@ Albedo Parameterizations
 
 Three albedo options accommodate different applications:
 
-- **Option 1**: Essery et al. (2013) 
-- **Option 2**: Tarboton (Utah) 
-- **Option 3**: VIC model 
+- **Option 1**: Essery et al. (2013)
+- **Option 2**: Utah Energy Balance (UEB)
+- **Option 3**: VIC model
 
 Snow Density Evolution
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -193,17 +193,12 @@ Model Limitations
 
 **Physical Limitations**:
 
-- Single-layer snowpack (no internal temperature gradients)
-- No explicit snow grain evolution or metamorphism
-- Simplified treatment of snow-vegetation interactions
+- Single-layer snowpack with separate surface and pack temperatures (but no internal temperature gradients)
+- No explicit snow grain evolution
+- Vegetation not included
 - Ground heat flux assumed constant
-
-**Technical Limitations**:
-
-- Requires complete meteorological forcing datasets
-- No built-in downscaling or gap-filling capabilities
-- Output storage can be large for long simulations over large domains
+- No snow redistribution via gravity or wind
 
 
-For comprehensive scientific background, algorithm details, and validation results, 
+For comprehensive scientific background, algorithm details, and validation results,
 please refer to the original SnowClim publication `(Lute et al., 2022) <https://doi.org/10.5194/gmd-15-5045-2022>`_.

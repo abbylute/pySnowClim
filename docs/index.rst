@@ -41,7 +41,7 @@ Key Features
 -----------
 
 * **Energy Balance Modeling**: Comprehensive energy balance calculations including sensible heat, latent heat, and radiation
-* **Multiple Albedo Options**: Three different albedo parameterizations (Essery et al. 2013, Utah Snow Model, VIC model)
+* **Multiple Albedo Options**: Three different albedo parameterizations (Essery et al. 2013, Utah Energy Balance (UEB) Snow Model, VIC model)
 * **Snow Physics**: Realistic snow density evolution, refreezing processes, and liquid water content
 * **Flexible Input/Output**: Support for NetCDF and NumPy array formats
 * **Efficient**: Vectorized operations for processing multiple grid points simultaneously

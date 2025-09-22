@@ -15,13 +15,13 @@ Main Model Runner
 The main entry point for running pySnowClim simulations. This module handles loading forcing data,
 parameter files, and coordinating model execution.
 
-Snow Climate Model Engine
+SnowClim Model Engine
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: snowclim_model
    :members: run_snowclim_model
 
-The core snow climate model that performs the physics calculations and timestep iterations.
+The core snow model that performs the physics calculations and timestep iterations.
 
 Parameter Configuration
 -----------------------
@@ -59,4 +59,3 @@ Precipitation Properties
    :members:
 
    Handles precipitation phase partitioning and properties of rainfall and snowfall.
-

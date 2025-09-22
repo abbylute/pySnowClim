@@ -45,5 +45,4 @@ Test your installation by running:
 
 .. code-block:: bash
 
-   python verify_instalation.py
-
+   python verify_installation.py

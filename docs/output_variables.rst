@@ -70,7 +70,7 @@ Mass Balance Components
      - Surface runoff from snowpack (melt + rain excess)
    * - ``RaininSnow``
      - mm/timestep
-     - Rainfall that fell on existing snowpack
+     - Rainfall remaining in snowpack after water drainage
    * - ``PackWater``
      - mm
      - Total liquid water currently stored in snowpack
@@ -96,7 +96,7 @@ Energy Balance Components
      - Latent heat flux (evaporation/sublimation/condensation)
    * - ``Q_precip``
      - kJ/m²/timestep
-     - Heat input from warm precipitation
+     - Heat input from liquid precipitation
    * - ``SW_down``
      - kJ/m²/timestep
      - Incoming shortwave (solar) radiation

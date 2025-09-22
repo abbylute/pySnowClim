@@ -229,7 +229,7 @@ pySnowClim generates comprehensive outputs covering snow state, energy fluxes, a
 
 - ``Runoff``: Surface runoff (mm/timestep)
 - ``PackWater``: Liquid water in snowpack (mm)
-- ``RaininSnow``: Rain on snow (mm/timestep)
+- ``RaininSnow``: Rainfall remaining in snowpack after water drainage (mm/timestep)
 
 **Energy Components:**
 
