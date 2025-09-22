@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>API Reference &#8212; pySnowClim 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=fa94e195"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="User Guide" href="user_guide.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading">¶</a></h1>
+<p>This page provides detailed documentation for the main pySnowClim modules and functions.</p>
+<section id="core-model-functions">
+<h2>Core Model Functions<a class="headerlink" href="#core-model-functions" title="Permalink to this heading">¶</a></h2>
+<section id="module-runsnowclim_model">
+<span id="main-model-runner"></span><h3>Main Model Runner<a class="headerlink" href="#module-runsnowclim_model" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>This script runs the SnowClim Model. It:</dt><dd><ul class="simple">
+<li><p>Sets default parameter values</p></li>
+<li><p>Imports example forcing data</p></li>
+<li><p>Runs the SnowClim model</p></li>
+</ul>
+</dd>
+</dl>
+<p>The script can be adapted for different parameters, time periods, or datasets.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="runsnowclim_model.run_model">
+<span class="sig-prename descclassname"><span class="pre">runsnowclim_model.</span></span><span class="sig-name descname"><span class="pre">run_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forcings_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/runsnowclim_model.html#run_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runsnowclim_model.run_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The main entry point for running pySnowClim simulations. This module handles loading forcing data,
+parameter files, and coordinating model execution.</p>
+</section>
+<section id="module-snowclim_model">
+<span id="snow-climate-model-engine"></span><h3>Snow Climate Model Engine<a class="headerlink" href="#module-snowclim_model" title="Permalink to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowclim_model.run_snowclim_model">
+<span class="sig-prename descclassname"><span class="pre">snowclim_model.</span></span><span class="sig-name descname"><span class="pre">run_snowclim_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forcings_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snowclim_model.html#run_snowclim_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowclim_model.run_snowclim_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulates snow accumulation, melting, sublimation, condensation, and energy balance
+over a given time period based on meteorological inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forcings_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) -- meteorological inputs.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) -- Parameters required by the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list with the results based on time.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>snow_model_instances (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>The core snow climate model that performs the physics calculations and timestep iterations.</p>
+</section>
+</section>
+<section id="module-createParameterFile">
+<span id="parameter-configuration"></span><h2>Parameter Configuration<a class="headerlink" href="#module-createParameterFile" title="Permalink to this heading">¶</a></h2>
+<p>This script creates and saves a dictionary of parameters for a snow model to read.
+Default values are based on the application of the snow model to the western United States.
+The parameters include settings for albedo, stability, snow density, and other
+model configurations.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="createParameterFile.create_dict_parameters">
+<span class="sig-prename descclassname"><span class="pre">createParameterFile.</span></span><span class="sig-name descname"><span class="pre">create_dict_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hours_in_ts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stability</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windHt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tempHt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snowoff_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snowoff_day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">albedo_option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_albedo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lw_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tadd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxtax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E0_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E0_app</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E0_stable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ts_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_albedo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snow_emis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snow_dens_default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_swe_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downward_longwave_radiation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downward_longwave_radiation_factor_start_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downward_longwave_radiation_factor_end_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/createParameterFile.html#create_dict_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#createParameterFile.create_dict_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes parameters to a dictionary.
+Default values are those used in application of the snow model to the
+western United States, some of which were determined through calibration
+at SNOTEL stations (Lute et al., 2022).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cal</strong> -- Time period for the model run (default: (2001-10-01 to 2002-09-30))</p></li>
+<li><p><strong>hours_in_ts</strong> -- Hours in time step (default: 4)</p></li>
+<li><p><strong>stability</strong> -- Stability setting (default: 1)</p></li>
+<li><p><strong>windHt</strong> -- Wind height (default: 10)</p></li>
+<li><p><strong>tempHt</strong> -- Temperature height (default: 2)</p></li>
+<li><p><strong>snowoff_month</strong> -- Month of snow-off (default: 9)</p></li>
+<li><p><strong>snowoff_day</strong> -- Day of snow-off (default: 1)</p></li>
+<li><p><strong>albedo_option</strong> -- Albedo option (default: 2)</p></li>
+<li><p><strong>max_albedo</strong> -- Maximum albedo (default: 0.85)</p></li>
+<li><p><strong>z_0</strong> -- Roughness length (default: 0.00001)</p></li>
+<li><p><strong>z_h</strong> -- Roughness length for heat (default: z_0/10)</p></li>
+<li><p><strong>lw_max</strong> -- Maximum liquid water fraction (default: 0.1)</p></li>
+<li><p><strong>Tstart</strong> -- Starting temperature (default: 0)</p></li>
+<li><p><strong>Tadd</strong> -- Temperature adjustment (default: -10000)</p></li>
+<li><p><strong>maxtax</strong> -- Maximum tax (default: 0.9)</p></li>
+<li><p><strong>E0_value</strong> -- Windless exchange coefficient (default: 1)</p></li>
+<li><p><strong>E0_app</strong> -- Windless exchange application option (default: 1)</p></li>
+<li><p><strong>E0_stable</strong> -- Windless exchange stability option (default: 2)</p></li>
+<li><p><strong>Ts_add</strong> -- Temperature add factor (default: 2)</p></li>
+<li><p><strong>smooth_time_steps</strong> -- Smoothing time steps (default: 12)</p></li>
+<li><p><strong>ground_albedo</strong> -- Ground albedo (default: 0.25)</p></li>
+<li><p><strong>snow_emis</strong> -- Snow emissivity (default: 0.98)</p></li>
+<li><p><strong>snow_dens_default</strong> -- Default snow density (default: 250)</p></li>
+<li><p><strong>G</strong> -- Ground conduction (default: 173/86400 kJ/m2/s)</p></li>
+<li><p><strong>max_swe_height</strong> -- Max height of SWE before downward radiation factor starts to work (default: 100 m)</p></li>
+<li><p><strong>downward_longwave_radiation_factor</strong> -- Factor to be multiplied by downward radiation when SWE &gt; max_swe_height (default: 1.3)</p></li>
+<li><p><strong>downward_longwave_radiation_factor_start_month</strong> -- Month where downward_longwave_radiation_factor start to be applied (default: 6)</p></li>
+<li><p><strong>downward_longwave_radiation_factor_end_month</strong> -- Month where downward_longwave_radiation_factor ends (default: 10)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Functions for creating and managing model parameter configurations.</p>
+</section>
+<section id="data-structures">
+<h2>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">¶</a></h2>
+<p>The model uses several key data structure classes:</p>
+<section id="model-variables">
+<h3>Model Variables<a class="headerlink" href="#model-variables" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="SnowModelVariables.SnowModelVariables">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SnowModelVariables.</span></span><span class="sig-name descname"><span class="pre">SnowModelVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outdim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowModelVariables.html#SnowModelVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowModelVariables.SnowModelVariables" title="Permalink to this definition">¶</a></dt>
+<dd><p>SnowModelVariables initializes the key variables needed to run the snow model,
+pre-allocating arrays with NaN values for snowpack and energy flux calculations.</p>
+<p>Container for all model output variables including snow properties, energy fluxes, and surface conditions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowModelVariables.SnowModelVariables.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outdim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowModelVariables.html#SnowModelVariables.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowModelVariables.SnowModelVariables.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="snowpack-state">
+<h3>Snowpack State<a class="headerlink" href="#snowpack-state" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SnowpackVariables.</span></span><span class="sig-name descname"><span class="pre">Snowpack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manages the internal state of the snowpack including temperature, density, liquid water content, and other physical properties.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to handle initialization and management of snowpack-related variables.</p>
+<section id="args">
+<h4>Args:<a class="headerlink" href="#args" title="Permalink to this heading">¶</a></h4>
+<blockquote>
+<div><p>n_lat (int): Number of latitude points.
+parameters (dict): Dictionary of model parameters, including 'ground_albedo' and 'snow_dens_default'.</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.initialize_snowpack_base">
+<span class="sig-name descname"><span class="pre">initialize_snowpack_base</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.initialize_snowpack_base"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.initialize_snowpack_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize all core snowpack-related variables except 'lastpacktemp' and 'snowage'.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.initialize_snowpack_runoff">
+<span class="sig-name descname"><span class="pre">initialize_snowpack_runoff</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.initialize_snowpack_runoff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.initialize_snowpack_runoff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize runoff.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.initialize_full_snowpack">
+<span class="sig-name descname"><span class="pre">initialize_full_snowpack</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.initialize_full_snowpack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.initialize_full_snowpack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize all snowpack variables, including 'lastpacktemp' and 'snowage'.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.apply_temperature_instability_correction">
+<span class="sig-name descname"><span class="pre">apply_temperature_instability_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_forcings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.apply_temperature_instability_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.apply_temperature_instability_correction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a temperature instability correction to adjust lastpacktemp and lastpackcc
+for snow with small SWE values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_forcings</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) -- Input meteorological forcings, including 'tavg'.</p></li>
+<li><p><strong>sec_in_ts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) -- Number of seconds in the timestep.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.calculate_new_snow_temperature_and_cold_content">
+<span class="sig-name descname"><span class="pre">calculate_new_snow_temperature_and_cold_content</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_forcings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.calculate_new_snow_temperature_and_cold_content"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.calculate_new_snow_temperature_and_cold_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate snow temperature and cold content and updates pack conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>precip</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><em>object</em></a>) -- Precipitation data with snowfall and rainfall properties.</p></li>
+<li><p><strong>input_forcings</strong> -- dict, containing current timestep forcings such as temperature.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.update_snowpack_water">
+<span class="sig-name descname"><span class="pre">update_snowpack_water</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">has_snow</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lw_max</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.update_snowpack_water"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.update_snowpack_water" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update snowpack liquid water content based on thresholds for irreducible and maximum water.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>has_snow</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><em>numpy.ndarray</em></a>) -- Active snowpack mask.</p></li>
+<li><p><strong>sec_in_ts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) -- Seconds in each timestep.</p></li>
+<li><p><strong>lw_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) -- Maximum liquid water content as fraction of snow depth.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.update_snowpack_state">
+<span class="sig-name descname"><span class="pre">update_snowpack_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_forcings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snow_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.update_snowpack_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.update_snowpack_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the snowpack state variables based on surface temperature, snowfall,
+pack density, water content, and albedo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_forcings</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) -- Dictionary with temperature and other input forcings.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) -- Model parameters for snowpack calculations.</p></li>
+<li><p><strong>snow_vars</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><em>object</em></a>) -- Snow model variables object for storing outputs.</p></li>
+<li><p><strong>precip</strong> (<em>class</em>) -- Precipitation properties.</p></li>
+<li><p><strong>sec_in_ts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) -- Number of seconds in a timestep.</p></li>
+<li><p><strong>coords</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) -- Coordinates information.</p></li>
+<li><p><strong>time_value</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>) -- Current time step and other time-related info.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.adjust_temp_snow">
+<span class="sig-name descname"><span class="pre">adjust_temp_snow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.adjust_temp_snow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.adjust_temp_snow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Temperature adjustment for snow with positive SWE.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.update_class_no_snow">
+<span class="sig-name descname"><span class="pre">update_class_no_snow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.update_class_no_snow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.update_class_no_snow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Temperature adjustment for snow with positive SWE.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.update_pack_sublimation">
+<span class="sig-name descname"><span class="pre">update_pack_sublimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Sublimation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_sublimation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.update_pack_sublimation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.update_pack_sublimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update snowpack properties by calculating sublimation.</p>
+<section id="parameters">
+<h4>Parameters:<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>sublimation: Current sublimation value (kg/m²).</p></li>
+<li><p>has_sublimation: Where sublimatino occurs.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SnowpackVariables.Snowpack.complete_pack_sublimation">
+<span class="sig-name descname"><span class="pre">complete_pack_sublimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Evaporation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_snow_left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SnowDensDefault</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SnowpackVariables.html#Snowpack.complete_pack_sublimation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SnowpackVariables.Snowpack.complete_pack_sublimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finishes the sublimation process in the snowpack.</p>
+<section id="id1">
+<h4>Parameters:<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Evaporation: Current Evaporation value (kg/m²).</p></li>
+<li><p>no_snow_left: Where snows is gone.</p></li>
+<li><p>SnowDensDefault: default values for the packsnowdensity.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="precipitation-properties">
+<h3>Precipitation Properties<a class="headerlink" href="#precipitation-properties" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PrecipitationProperties.</span></span><span class="sig-name descname"><span class="pre">PrecipitationProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snowdens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snowfallcc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PrecipitationProperties.html#PrecipitationProperties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class takes the precipitation properties as inputs and computes the snow
+depth based on SWE and snow density.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties.rain">
+<span class="sig-name descname"><span class="pre">rain</span></span><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties.rain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rainfall in mm for the given timestep.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties.sfe">
+<span class="sig-name descname"><span class="pre">sfe</span></span><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties.sfe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Snowfall water equivalent in mm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties.snowdens">
+<span class="sig-name descname"><span class="pre">snowdens</span></span><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties.snowdens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Density of the freshly fallen snow in kg/m^3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties.snowdepth">
+<span class="sig-name descname"><span class="pre">snowdepth</span></span><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties.snowdepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculated depth of snow based on SWE and snow density.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties.calculate_snowdepth">
+<span class="sig-name descname"><span class="pre">calculate_snowdepth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">water_density</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties.calculate_snowdepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the snow depth using SWE and
+snow density with a water density constant.</p>
+</dd></dl>
+
+<p>Handles precipitation phase partitioning and properties of rainfall and snowfall.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="PrecipitationProperties.PrecipitationProperties.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snowdens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snowfallcc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PrecipitationProperties.html#PrecipitationProperties.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PrecipitationProperties.PrecipitationProperties.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the PrecipitationProperties class with rainfall, SWE, and snow density
+values, and computes the snow depth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rain</strong> (<em>np.ndarray</em>) -- Rainfall amount (mm).</p></li>
+<li><p><strong>sfe</strong> (<em>np.ndarray</em>) -- snowfall water equivalent (mm).</p></li>
+<li><p><strong>snowdens</strong> (<em>np.ndarray</em>) -- Density of the fresh snow (kg/m^3).</p></li>
+<li><p><strong>water_density</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) -- Constant representing water density (kg/m^3),
+typically 1000 for fresh water.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pySnowClim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-model-functions">Core Model Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-createParameterFile">Parameter Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-structures">Data Structures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_variables.html">Output Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to pySnowClim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="user_guide.html" title="previous chapter">User Guide</a></li>
+      <li>Next: <a href="examples.html" title="next chapter">Examples</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Abby Lute, Aranildo Lima, Rajesh Shrestha.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/api_reference.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

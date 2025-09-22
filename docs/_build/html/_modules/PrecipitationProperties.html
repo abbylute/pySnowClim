@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PrecipitationProperties &#8212; pySnowClim 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=fa94e195"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for PrecipitationProperties</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">PrecipitationProperties encapsulates properties related to snowfall, including rain,</span>
+<span class="sd">snow water equivalent (SWE), snow density, and calculated snow depth.</span>
+<span class="sd">&quot;&quot;&quot;</span> 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">constants</span> <span class="k">as</span> <span class="nn">const</span>
+
+<div class="viewcode-block" id="PrecipitationProperties"><a class="viewcode-back" href="../api_reference.html#PrecipitationProperties.PrecipitationProperties">[docs]</a><span class="k">class</span> <span class="nc">PrecipitationProperties</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class takes the precipitation properties as inputs and computes the snow</span>
+<span class="sd">    depth based on SWE and snow density.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        rain (np.ndarray): Rainfall in mm for the given timestep.</span>
+<span class="sd">        sfe (np.ndarray): Snowfall water equivalent in mm.</span>
+<span class="sd">        snowdens (np.ndarray): Density of the freshly fallen snow in kg/m^3.</span>
+<span class="sd">        snowdepth (np.ndarray): Calculated depth of snow based on SWE and snow density.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        calculate_snowdepth(water_density): Computes the snow depth using SWE and</span>
+<span class="sd">                                            snow density with a water density constant.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PrecipitationProperties.__init__"><a class="viewcode-back" href="../api_reference.html#PrecipitationProperties.PrecipitationProperties.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rain</span><span class="p">,</span> <span class="n">sfe</span><span class="p">,</span> <span class="n">snowdens</span><span class="p">,</span> <span class="n">snowfallcc</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the PrecipitationProperties class with rainfall, SWE, and snow density</span>
+<span class="sd">        values, and computes the snow depth.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            rain (np.ndarray): Rainfall amount (mm).</span>
+<span class="sd">            sfe (np.ndarray): snowfall water equivalent (mm).</span>
+<span class="sd">            snowdens (np.ndarray): Density of the fresh snow (kg/m^3).</span>
+<span class="sd">            water_density (float): Constant representing water density (kg/m^3),</span>
+<span class="sd">                                   typically 1000 for fresh water.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">rain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sfe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">sfe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snowdens</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">snowdens</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snowfallcc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">snowfallcc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snowdepth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_snowdepth</span><span class="p">()</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">_calculate_snowdepth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates snow depth based on SFE and snow density.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: Calculated snow depth in meters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sfe</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">WATERDENS</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">snowdens</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pySnowClim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output_variables.html">Output Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to pySnowClim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Abby Lute, Aranildo Lima, Rajesh Shrestha.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -17,11 +17,52 @@ hydrologists, ecologists, students, and land
 managers who need gridded information about snow for water resource
 assessments, ecological studies, and climate impact analysis.
 
-## Requirements
-Before running pySnowClim, ensure that you have the following installed:
+## Installation
 
-* Python 3.x
-* Necessary Python packages (if any are needed, such as numpy, scipy, etc.)
+### Prerequisites
+- Python 3.8 or higher
+- Git (for cloning the repository)
+
+### Option 1: Install from source (Recommended for development)
+
+1.Clone the repository:
+```bash
+git clone https://github.com/abbylute/pySnowClim.git
+cd pySnowClim
+```
+
+2.Create a virtual environment (recommended):
+```bash
+python -m venv pysnowclim-env
+source pysnowclim-env/bin/activate  # On Windows: pysnowclim-env\Scripts\activate
+```
+or with conda:
+```bash
+# Create environment with Python
+conda create -n pysnowclim python=3.9
+conda activate pysnowclim
+```
+
+3.Install the package and dependencies:
+This installs the package in "editable" mode, so changes to the source code are immediately available.
+```bash
+pip install -e .
+```
+
+### Option 2: Install for regular use
+```bash
+pip install git+https://github.com/abbylute/pySnowClim.git
+```
+
+### Verify Installation
+To verify that pySnowClim is installed correctly:
+```bash
+python verify_instalation.py
+```
+
+### Dependencies
+See the requirements.txt file to check the required packages:
+
 
 ## Running the Model
 1. Prepare Input Data
