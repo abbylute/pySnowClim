@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Changelog &#8212; pySnowClim 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=fa94e195"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Contributing to pySnowClim" href="contributing.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this heading">¶</a></h1>
+<p>All notable changes to pySnowClim will be documented in this file.</p>
+<p>The format is based on <a class="reference external" href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>, and this project adheres to <a class="reference external" href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<section id="unreleased">
+<h2>[Unreleased]<a class="headerlink" href="#unreleased" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="xx-xx">
+<h2>[0.1.0] - 2024-XX-XX<a class="headerlink" href="#xx-xx" title="Permalink to this heading">¶</a></h2>
+<section id="initial-release">
+<h3>Initial Release<a class="headerlink" href="#initial-release" title="Permalink to this heading">¶</a></h3>
+<p><strong>Added</strong></p>
+<p><em>Core Model Features:</em></p>
+<ul class="simple">
+<li><p>Complete Python implementation of the SnowClim snow model</p></li>
+<li><p>Energy balance snow modeling with comprehensive physics</p></li>
+<li><p>Support for gridded and point-scale simulations</p></li>
+<li><p>Three albedo parameterization options (Essery, Tarboton, VIC)</p></li>
+<li><p>Atmospheric stability corrections for turbulent fluxes</p></li>
+<li><p>Comprehensive snow density evolution modeling</p></li>
+<li><p>Liquid water content tracking and refreezing processes</p></li>
+<li><p>Cold content and energy distribution algorithms</p></li>
+</ul>
+<p><em>Input/Output Capabilities:</em></p>
+<ul class="simple">
+<li><p>NetCDF input format support for forcing data</p></li>
+<li><p>Legacy MATLAB .mat file support for backward compatibility</p></li>
+<li><p>NetCDF output format with full metadata</p></li>
+<li><p>NumPy binary output format for analysis</p></li>
+<li><p>Flexible parameter configuration system via JSON files</p></li>
+<li><p>Command-line interface for operational use</p></li>
+</ul>
+<p><em>Physical Processes:</em></p>
+<ul class="simple">
+<li><p>Precipitation phase partitioning (rain/snow) using logistic regression</p></li>
+<li><p>Fresh snow density calculation as function of temperature</p></li>
+<li><p>Snow compaction following Anderson (1976) parameterization</p></li>
+<li><p>Multiple albedo aging models for different applications</p></li>
+<li><p>Sublimation and evaporation processes with proper thermodynamics</p></li>
+<li><p>Rain-on-snow processes and liquid water drainage</p></li>
+<li><p>Ground heat flux and energy balance closure</p></li>
+</ul>
+<p><em>Data Structures:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SnowModelVariables</span></code> class for comprehensive output management</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SnowpackVariables</span></code> class for internal snowpack state tracking</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PrecipitationProperties</span></code> class for precipitation processing</p></li>
+<li><p>Efficient vectorized operations for multi-point simulations</p></li>
+</ul>
+<p><em>Utilities and Tools:</em></p>
+<ul class="simple">
+<li><p>Parameter file creation utilities with scientifically-validated defaults</p></li>
+<li><p>Time series to daily mean conversion functions</p></li>
+<li><p>Model comparison and validation tools</p></li>
+<li><p>Comprehensive test suite for quality assurance</p></li>
+</ul>
+<p><em>Documentation:</em></p>
+<ul class="simple">
+<li><p>Complete Sphinx documentation with installation, user guide, and API reference</p></li>
+<li><p>Detailed model description with physics background</p></li>
+<li><p>Output variable descriptions with units and typical ranges</p></li>
+<li><p>Contributing guidelines for community development</p></li>
+<li><p>Example workflows and use cases</p></li>
+</ul>
+<p><strong>Technical Specifications</strong></p>
+<p><em>System Requirements:</em></p>
+<ul class="simple">
+<li><p>Python 3.8+ compatibility</p></li>
+<li><p>Core dependencies: numpy, xarray, scipy, netCDF4, pandas</p></li>
+<li><p>Cross-platform support (Windows, macOS, Linux)</p></li>
+</ul>
+<p><em>Scientific Validation:</em></p>
+<ul class="simple">
+<li><p>Physics based on peer-reviewed snow science literature</p></li>
+<li><p>Parameter defaults calibrated against western US SNOTEL network</p></li>
+<li><p>Energy and mass balance conservation enforced</p></li>
+</ul>
+<p><strong>Configuration Options</strong></p>
+<p><em>Model Physics:</em></p>
+<ul class="simple">
+<li><p>Multiple albedo parameterizations for different research applications</p></li>
+<li><p>Configurable turbulent flux formulations with stability corrections</p></li>
+<li><p>Adjustable snow density parameters and compaction rates</p></li>
+</ul>
+<p><em>Operational Settings:</em></p>
+<ul class="simple">
+<li><p>Flexible timestep configuration (1-24 hours)</p></li>
+<li><p>Adjustable output variables and formats</p></li>
+<li><p>Vectorized calculations for computational efficiency</p></li>
+<li><p>Configurable simulation periods and restart capabilities</p></li>
+</ul>
+<p><strong>Quality Assurance</strong></p>
+<p><em>Testing Framework:</em></p>
+<ul class="simple">
+<li><p>Unit tests for individual physics functions</p></li>
+<li><p>Integration tests for complete model workflows</p></li>
+</ul>
+<p><em>Technical Constraints:</em></p>
+<ul class="simple">
+<li><p>Requires complete meteorological forcing datasets</p></li>
+<li><p>No built-in spatial downscaling or gap-filling capabilities</p></li>
+<li><p>Memory usage scales with domain size and output retention</p></li>
+<li><p>Limited parallel processing optimization in initial release</p></li>
+<li><p>Output storage can be large for long simulations over large domains</p></li>
+</ul>
+<p><strong>Migration Notes</strong></p>
+<p><em>From Original MATLAB SnowClim:</em></p>
+<ul class="simple">
+<li><p>Identical physics implementation ensures result consistency</p></li>
+<li><p>Enhanced computational efficiency through vectorization</p></li>
+<li><p>Improved data handling with modern Python libraries</p></li>
+<li><p>Maintained backward compatibility for existing workflows</p></li>
+</ul>
+<p><em>Parameter Files:</em></p>
+<ul class="simple">
+<li><p>JSON format replaces MATLAB .mat parameter files</p></li>
+<li><p>Automatic conversion utilities provided for existing parameter sets</p></li>
+<li><p>Enhanced parameter validation and error checking</p></li>
+<li><p>Comprehensive default parameter sets for common applications</p></li>
+</ul>
+<p>---</p>
+<p><strong>Version History Summary</strong></p>
+<ul class="simple">
+<li><p><strong>v0.1.0</strong>: Initial Python implementation with complete feature set</p></li>
+<li><p><strong>Future versions</strong>: Will follow semantic versioning with detailed changelogs</p></li>
+</ul>
+<p><strong>Acknowledgments</strong></p>
+<p>This Python implementation builds upon the original SnowClim model and acknowledges the contributions of the broader snow modeling community, including field data providers, algorithm developers, and validation researchers.</p>
+<p>For detailed technical information about model physics and implementation, please refer to the original SnowClim publication <a class="reference external" href="https://doi.org/10.5194/gmd-15-5045-2022">(Lute et al., 2022)</a>  and the comprehensive model documentation.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pySnowClim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_variables.html">Output Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to pySnowClim</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">[Unreleased]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xx-xx">[0.1.0] - 2024-XX-XX</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="contributing.html" title="previous chapter">Contributing to pySnowClim</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Abby Lute, Aranildo Lima, Rajesh Shrestha.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/changelog.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

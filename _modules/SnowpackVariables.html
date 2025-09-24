@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SnowpackVariables &#8212; pySnowClim 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=fa94e195"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for SnowpackVariables</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Snowpack Model Script</span>
+
+<span class="sd">This script defines a `Snowpack` class used to manage the initialization and tracking of</span>
+<span class="sd">snowpack-related variables for climate or environmental models.</span>
+
+<span class="sd">Attributes:</span>
+<span class="sd">-----------</span>
+<span class="sd">- lastalbedo (np.ndarray): Albedo values initialized based on the ground albedo parameter.</span>
+<span class="sd">- lastswe (np.ndarray): Last snow water equivalent initialized to zeros.</span>
+<span class="sd">- lastsnowdepth (np.ndarray): Last snow depth initialized to zeros.</span>
+<span class="sd">- packsnowdensity (np.ndarray): Snow density initialized based on the default parameter.</span>
+<span class="sd">- lastpackcc (np.ndarray): Last pack cold content initialized to zeros.</span>
+<span class="sd">- lastpackwater (np.ndarray): Last pack water content initialized to zeros.</span>
+<span class="sd">- lastpacktemp (np.ndarray): Last pack temperature initialized to zeros (only with full initialization).</span>
+<span class="sd">- snowage (np.ndarray): Snow age initialized to zeros (only with full initialization).</span>
+<span class="sd">- runoff (np.ndarray): Runoff values initialized to zeros to track water movement from the snowpack.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">------</span>
+<span class="sd">For initializing the snowpack variables:</span>
+<span class="sd">    1. `initialize_full_snowpack()`: Initializes all variables, including `lastpacktemp` and `snowage`.</span>
+<span class="sd">    &gt;&gt;&gt; snowpack = Snowpack(n_lat, parameters)</span>
+<span class="sd">    &gt;&gt;&gt; snowpack.initialize_full_snowpack(forcings_data)</span>
+<span class="sd">    2. `initialize_snowpack_base()`: Initializes all variables except `lastpacktemp` and `snowage`.</span>
+<span class="sd">    &gt;&gt;&gt; snowpack.initialize_snowpack_base(forcings_data)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">constants</span> <span class="k">as</span> <span class="nn">const</span>
+
+<span class="kn">from</span> <span class="nn">calcSnowDensityAfterSnow</span> <span class="kn">import</span> <span class="n">calc_snow_density_after_snow</span>
+<span class="kn">from</span> <span class="nn">calcSnowDensity</span> <span class="kn">import</span> <span class="n">calc_snow_density</span>
+<span class="kn">from</span> <span class="nn">updatePackWater</span> <span class="kn">import</span> <span class="n">update_pack_water</span>
+<span class="kn">from</span> <span class="nn">calcAlbedo</span> <span class="kn">import</span> <span class="n">calc_albedo</span>
+
+
+<div class="viewcode-block" id="Snowpack"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack">[docs]</a><span class="k">class</span> <span class="nc">Snowpack</span><span class="p">:</span>
+<div class="viewcode-block" id="Snowpack.__init__"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_lat</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Class to handle initialization and management of snowpack-related variables.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        -----</span>
+<span class="sd">            n_lat (int): Number of latitude points.</span>
+<span class="sd">            parameters (dict): Dictionary of model parameters, including &#39;ground_albedo&#39; and &#39;snow_dens_default&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span> <span class="o">=</span> <span class="n">n_lat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ground_albedo</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;ground_albedo&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snow_dens_default</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;snow_dens_default&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sec_in_ts</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;hours_in_ts&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">HR_2_SECS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_full_snowpack</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Snowpack.initialize_snowpack_base"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.initialize_snowpack_base">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_snowpack_base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize all core snowpack-related variables except &#39;lastpacktemp&#39; and &#39;snowage&#39;.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastalbedo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ground_albedo</span>
+        <span class="c1"># Snow Water Equivalent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">snow_dens_default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># Cold content</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># Pack water content</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rain_in_snow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Snowpack.initialize_snowpack_runoff"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.initialize_snowpack_runoff">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_snowpack_runoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize runoff.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Snowpack.initialize_full_snowpack"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.initialize_full_snowpack">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_full_snowpack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize all snowpack variables, including &#39;lastpacktemp&#39; and &#39;snowage&#39;.&quot;&quot;&quot;</span>
+        <span class="c1"># Initialize base variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_snowpack_base</span><span class="p">()</span>
+        <span class="c1"># Initialize lastpacktemp and snowage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snowage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_lat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Snowpack.apply_temperature_instability_correction"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.apply_temperature_instability_correction">[docs]</a>    <span class="k">def</span> <span class="nf">apply_temperature_instability_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_forcings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply a temperature instability correction to adjust lastpacktemp and lastpackcc</span>
+<span class="sd">        for snow with small SWE values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_forcings (dict): Input meteorological forcings, including &#39;tavg&#39;.</span>
+<span class="sd">            sec_in_ts (float): Number of seconds in the timestep.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Define threshold based on time step</span>
+        <span class="n">thres</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sec_in_ts</span> <span class="o">/</span> <span class="n">const</span><span class="o">.</span><span class="n">HR_2_SECS</span> <span class="o">*</span> \
+            <span class="mf">0.015</span>  <span class="c1"># 15mm for each hour in the time step</span>
+
+        <span class="c1"># Identify indices where the instability correction should apply</span>
+        <span class="n">instability_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span> <span class="o">&lt;</span> <span class="n">thres</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">instability_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">instability_indices</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span> <span class="o">&lt;</span> <span class="n">input_forcings</span><span class="p">[</span><span class="s1">&#39;tavg&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Apply corrections</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span><span class="p">[</span><span class="n">instability_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span> <span class="n">input_forcings</span><span class="p">[</span><span class="s1">&#39;tavg&#39;</span><span class="p">][</span><span class="n">instability_indices</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="p">[</span><span class="n">instability_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">WATERDENS</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">CI</span> <span class="o">*</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">instability_indices</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span><span class="p">[</span><span class="n">instability_indices</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Snowpack.calculate_new_snow_temperature_and_cold_content"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.calculate_new_snow_temperature_and_cold_content">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_new_snow_temperature_and_cold_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precip</span><span class="p">,</span> <span class="n">input_forcings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate snow temperature and cold content and updates pack conditions.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            precip (object): Precipitation data with snowfall and rainfall properties.</span>
+<span class="sd">            input_forcings: dict, containing current timestep forcings such as temperature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span> <span class="o">+=</span> <span class="n">precip</span><span class="o">.</span><span class="n">snowfallcc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">has_new_snow</span> <span class="o">=</span> <span class="n">precip</span><span class="o">.</span><span class="n">sfe</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="c1"># Update last pack temperature where there is snowfall</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">has_new_snow</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span><span class="p">[</span><span class="n">has_new_snow</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="p">[</span><span class="n">has_new_snow</span><span class="p">]</span> <span class="o">/</span> \
+                <span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">WATERDENS</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">CI</span> <span class="o">*</span>
+                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">has_new_snow</span><span class="p">]</span> <span class="o">+</span> <span class="n">precip</span><span class="o">.</span><span class="n">sfe</span><span class="p">[</span><span class="n">has_new_snow</span><span class="p">]))</span></div>
+
+    <span class="k">def</span> <span class="nf">_calc_snowdensity_after_snow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">has_snow</span><span class="p">,</span> <span class="n">precip</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the new snowpack density after fresh snowfall.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">            has_snow (numpy.ndarray): Active snowpack mask.</span>
+<span class="sd">            precip (object): Precipitation data with snowfall and rainfall properties.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">value</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_snow_density_after_snow</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">precip</span><span class="o">.</span><span class="n">sfe</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">precip</span><span class="o">.</span><span class="n">snowdens</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">_calc_new_snow_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">has_snow</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate new snow density following compaction as a function of SWE and snow temperature.</span>
+<span class="sd">        Based on Essery et al. (2013), Anderson (1976), and Boone (2002).</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">            - lastswe: Snow water equivalent (SWE) in kg/m².</span>
+<span class="sd">            - sec_in_ts: Number of seconds in the current timestep.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">value</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_snow_density</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sec_in_ts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">const</span><span class="o">.</span><span class="n">WATERDENS</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="p">[</span><span class="n">has_snow</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Snowpack.update_snowpack_water"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.update_snowpack_water">[docs]</a>    <span class="k">def</span> <span class="nf">update_snowpack_water</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">has_snow</span><span class="p">,</span> <span class="n">lw_max</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update snowpack liquid water content based on thresholds for irreducible and maximum water.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            has_snow (numpy.ndarray): Active snowpack mask.</span>
+<span class="sd">            sec_in_ts (int): Seconds in each timestep.</span>
+<span class="sd">            lw_max (float): Maximum liquid water content as fraction of snow depth.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_runoff</span><span class="p">,</span> <span class="n">lastpackwater</span> <span class="o">=</span> <span class="n">update_pack_water</span><span class="p">(</span>
+            <span class="n">has_snow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="n">lw_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">runoff</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sec_in_ts</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runoff</span> <span class="o">=</span> <span class="n">updated_runoff</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span> <span class="o">=</span> <span class="n">lastpackwater</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_calc_rain_in_snow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">has_snow</span><span class="p">,</span> <span class="n">previouspackwater</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the amount of rain in the snow.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            has_snow (numpy.ndarray): Active snowpack mask.</span>
+<span class="sd">            previouspackwater (numpy.ndarray): Previous snowpack water.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rain_in_snow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">has_snow</span><span class="p">,</span>
+                                     <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span> <span class="o">-</span>
+                                                <span class="n">previouspackwater</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                                     <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_albedo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">precip</span><span class="p">,</span>
+                          <span class="n">snow_vars</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the snow albedo based on the selected model option and various snow and environmental parameters.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">            parameters (dict): Model parameters containing albedo coefficients and thresholds.</span>
+<span class="sd">            precip (object): Precipitation data with snowfall and rainfall properties.</span>
+<span class="sd">            snow_vars (SnowModelVariables): Current state of the snowpack variables.</span>
+<span class="sd">            lat (float): Latitude of the location, in degrees.</span>
+<span class="sd">            month (int): Current month (1–12) for seasonal adjustments.</span>
+<span class="sd">            day (int): Day of the month (1–31) for daily solar angle effects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lastalbedo</span><span class="p">,</span> <span class="n">snowage</span> <span class="o">=</span> <span class="n">calc_albedo</span><span class="p">(</span>
+            <span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastalbedo</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">precip</span><span class="o">.</span><span class="n">snowdepth</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">precip</span><span class="o">.</span><span class="n">sfe</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="n">snow_vars</span><span class="o">.</span><span class="n">SnowTemp</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">lat</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">snowage</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sec_in_ts</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snowage</span> <span class="o">=</span> <span class="n">snowage</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastalbedo</span> <span class="o">=</span> <span class="n">lastalbedo</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Snowpack.update_snowpack_state"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.update_snowpack_state">[docs]</a>    <span class="k">def</span> <span class="nf">update_snowpack_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_forcings</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">snow_vars</span><span class="p">,</span>
+                              <span class="n">precip</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">time_value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the snowpack state variables based on surface temperature, snowfall,</span>
+<span class="sd">        pack density, water content, and albedo.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_forcings (dict): Dictionary with temperature and other input forcings.</span>
+<span class="sd">            parameters (dict): Model parameters for snowpack calculations.</span>
+<span class="sd">            snow_vars (object): Snow model variables object for storing outputs.</span>
+<span class="sd">            precip (class): Precipitation properties.</span>
+<span class="sd">            sec_in_ts (float): Number of seconds in a timestep.</span>
+<span class="sd">            coords (dict): Coordinates information.</span>
+<span class="sd">            time_value (tuple): Current time step and other time-related info.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_snowdensity_after_snow</span><span class="p">(</span><span class="n">snow_vars</span><span class="o">.</span><span class="n">ExistSnow</span><span class="p">,</span> <span class="n">precip</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span> <span class="o">+=</span> <span class="n">precip</span><span class="o">.</span><span class="n">sfe</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span> <span class="o">+=</span> <span class="n">precip</span><span class="o">.</span><span class="n">snowdepth</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_new_snow_density</span><span class="p">(</span><span class="n">snow_vars</span><span class="o">.</span><span class="n">ExistSnow</span><span class="p">)</span>
+
+        <span class="c1"># Update snowpack liquid water content</span>
+        <span class="n">previouspackwater</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span><span class="p">[</span><span class="n">snow_vars</span><span class="o">.</span><span class="n">ExistSnow</span><span class="p">]</span> <span class="o">+=</span> <span class="n">precip</span><span class="o">.</span><span class="n">rain</span><span class="p">[</span><span class="n">snow_vars</span><span class="o">.</span><span class="n">ExistSnow</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_snowpack_water</span><span class="p">(</span><span class="n">snow_vars</span><span class="o">.</span><span class="n">ExistSnow</span><span class="p">,</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;lw_max&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_rain_in_snow</span><span class="p">(</span><span class="n">snow_vars</span><span class="o">.</span><span class="n">ExistSnow</span><span class="p">,</span> <span class="n">previouspackwater</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_albedo</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">precip</span><span class="p">,</span> <span class="n">snow_vars</span><span class="p">,</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">],</span>
+                               <span class="n">time_value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">time_value</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Snowpack.adjust_temp_snow"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.adjust_temp_snow">[docs]</a>    <span class="k">def</span> <span class="nf">adjust_temp_snow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Temperature adjustment for snow with positive SWE.&quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">/</span> \
+                <span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">WATERDENS</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">CI</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">b</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Snowpack.update_class_no_snow"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.update_class_no_snow">[docs]</a>    <span class="k">def</span> <span class="nf">update_class_no_snow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Temperature adjustment for snow with positive SWE.&quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="o">~</span><span class="n">b</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastalbedo</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;ground_albedo&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">snowage</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastpacktemp</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="p">[</span><span class="o">~</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;snow_dens_default&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Snowpack.update_pack_sublimation"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.update_pack_sublimation">[docs]</a>    <span class="k">def</span> <span class="nf">update_pack_sublimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sublimation</span><span class="p">,</span> <span class="n">has_sublimation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update snowpack properties by calculating sublimation.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        - sublimation: Current sublimation value (kg/m²).</span>
+<span class="sd">        - has_sublimation: Where sublimatino occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">initialSWE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># For non-complete sublimation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">has_sublimation</span><span class="p">]</span> <span class="o">-=</span> <span class="n">Sublimation</span><span class="p">[</span><span class="n">has_sublimation</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span><span class="p">[</span><span class="n">has_sublimation</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">has_sublimation</span><span class="p">]</span> <span class="o">/</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="p">[</span><span class="n">has_sublimation</span><span class="p">]</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">WATERDENS</span>
+
+        <span class="c1"># only update cc for sublimation, not condensation</span>
+        <span class="n">cc_sublimation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">has_sublimation</span><span class="p">,</span>  <span class="n">Sublimation</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="p">[</span><span class="n">cc_sublimation</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">cc_sublimation</span><span class="p">]</span> <span class="o">/</span> \
+            <span class="n">initialSWE</span><span class="p">[</span><span class="n">cc_sublimation</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Snowpack.complete_pack_sublimation"><a class="viewcode-back" href="../api_reference.html#SnowpackVariables.Snowpack.complete_pack_sublimation">[docs]</a>    <span class="k">def</span> <span class="nf">complete_pack_sublimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Evaporation</span><span class="p">,</span> <span class="n">no_snow_left</span><span class="p">,</span> <span class="n">SnowDensDefault</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finishes the sublimation process in the snowpack.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        - Evaporation: Current Evaporation value (kg/m²).</span>
+<span class="sd">        - no_snow_left: Where snows is gone.</span>
+<span class="sd">        - SnowDensDefault: default values for the packsnowdensity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Complete sublimation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastswe</span><span class="p">[</span><span class="n">no_snow_left</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastsnowdepth</span><span class="p">[</span><span class="n">no_snow_left</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackcc</span><span class="p">[</span><span class="n">no_snow_left</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packsnowdensity</span><span class="p">[</span><span class="n">no_snow_left</span><span class="p">]</span> <span class="o">=</span> <span class="n">SnowDensDefault</span>
+
+        <span class="c1"># Update packwater by subtracting evaporation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastpackwater</span> <span class="o">-</span> <span class="n">Evaporation</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pySnowClim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output_variables.html">Output Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to pySnowClim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Abby Lute, Aranildo Lima, Rajesh Shrestha.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

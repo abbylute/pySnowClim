@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>runsnowclim_model &#8212; pySnowClim 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=fa94e195"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for runsnowclim_model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This script runs the SnowClim Model. It:</span>
+<span class="sd"> - Sets default parameter values</span>
+<span class="sd"> - Imports example forcing data</span>
+<span class="sd"> - Runs the SnowClim model</span>
+
+<span class="sd">The script can be adapted for different parameters, time periods, or datasets.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">createParameterFile</span> <span class="kn">import</span> <span class="n">create_dict_parameters</span>
+<span class="kn">from</span> <span class="nn">snowclim_model</span> <span class="kn">import</span> <span class="n">run_snowclim_model</span>
+
+<span class="n">FORCINGS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;lrad&#39;</span><span class="p">,</span> <span class="s1">&#39;solar&#39;</span><span class="p">,</span> <span class="s1">&#39;tavg&#39;</span><span class="p">,</span> <span class="s1">&#39;ppt&#39;</span><span class="p">,</span> <span class="s1">&#39;vs&#39;</span><span class="p">,</span> <span class="s1">&#39;psfc&#39;</span><span class="p">,</span> <span class="s1">&#39;huss&#39;</span><span class="p">,</span> <span class="s1">&#39;relhum&#39;</span><span class="p">,</span><span class="s1">&#39;tdmean&#39;</span><span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">_load_forcing_data</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load data from a file based on its extension.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_path (str): Path to the input file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dataset in dictionary form with variable names as keys and data arrays as values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file_path</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.nc&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_load_ncdf_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#raise ValueError(f&quot;Unsupported file extension: {ext}&quot;)</span>
+        <span class="k">return</span> <span class="n">_load_mat_data</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_load_ncdf_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads a NetCDF file and extracts meteorological forcing data, time, and coordinates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path (str): Path to the NetCDF file.</span>
+<span class="sd">        parameters (dict): Dictionary containing model parameters.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Extracted data including latitude, longitude, time, and forcings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
+                              <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">time_sliced</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="s1">&#39;s&#39;</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">time</span><span class="p">]</span>
+    <span class="n">time_sliced</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[:</span><span class="mi">4</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">13</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">14</span><span class="p">:</span><span class="mi">16</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">17</span><span class="p">:</span><span class="mi">19</span><span class="p">])]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">time_sliced</span><span class="p">]</span>
+
+    <span class="c1"># Load meteorological data (forcing inputs)</span>
+    <span class="n">forcings</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">FORCINGS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ds</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">forcings</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">forcings</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># if f == &#39;ppt&#39;:</span>
+        <span class="c1">#     forcings[f] /= 1000</span>
+
+        <span class="c1"># converting from kJ m-2 hr-1 to kJ m-2 timestep-1</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="s1">&#39;lrad&#39;</span> <span class="ow">or</span> <span class="n">f</span> <span class="o">==</span> <span class="s1">&#39;solar&#39;</span><span class="p">:</span>
+            <span class="n">forcings</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">*=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;hours_in_ts&#39;</span><span class="p">]</span>
+
+    <span class="n">final_dict</span><span class="o">=</span> <span class="p">{</span><span class="s1">&#39;coords&#39;</span><span class="p">:</span>
+            <span class="p">{</span>
+            <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">lat</span><span class="p">,</span>
+            <span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">lon</span><span class="p">,</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span>
+            <span class="s1">&#39;time_sliced&#39;</span><span class="p">:</span> <span class="n">time_sliced</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="s1">&#39;forcings&#39;</span><span class="p">:</span> <span class="n">forcings</span>
+        <span class="p">}</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">final_dict</span>
+
+
+<span class="k">def</span> <span class="nf">_load_mat_data</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load meteorological forcing data and geospatial information from the specified directory.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data_dir (str): Path to the directory containing the forcing data files.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dictionary containing the loaded variables (lat, lon, lrad, solar, tavg, ppt, vs, psfc, huss, relhum, tdmean).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load latitude, longitude, and elevation data</span>
+    <span class="n">latlonelev</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">lat_lon_elev.mat&#39;</span><span class="p">)</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">latlonelev</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">latlonelev</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Load meteorological data (forcing inputs)</span>
+    <span class="n">lrad</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">lrad.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;lrad&#39;</span><span class="p">]</span>
+    <span class="n">solar</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">solar.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;solar&#39;</span><span class="p">]</span>
+    <span class="n">tavg</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">tavg.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;tavg&#39;</span><span class="p">]</span>
+    <span class="n">ppt</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">ppt.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;ppt&#39;</span><span class="p">]</span>
+    <span class="n">vs</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">vs.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;vs&#39;</span><span class="p">]</span>
+    <span class="n">psfc</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">psfc.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;psfc&#39;</span><span class="p">]</span>
+    <span class="n">huss</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">huss.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;huss&#39;</span><span class="p">]</span>
+    <span class="n">relhum</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">relhum.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;relhum&#39;</span><span class="p">]</span>
+    <span class="n">tdmean</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s1">tdmean.mat&#39;</span><span class="p">)[</span><span class="s1">&#39;tdmean&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Return the data as a dictionary</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;coords&#39;</span><span class="p">:</span>
+            <span class="p">{</span>
+            <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">lat</span><span class="p">,</span>
+            <span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">lon</span><span class="p">,</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;time_sliced&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="s1">&#39;forcings&#39;</span><span class="p">:</span>
+            <span class="p">{</span>
+            <span class="s1">&#39;lrad&#39;</span><span class="p">:</span> <span class="n">lrad</span><span class="p">,</span>
+            <span class="s1">&#39;solar&#39;</span><span class="p">:</span> <span class="n">solar</span><span class="p">,</span>
+            <span class="s1">&#39;tavg&#39;</span><span class="p">:</span> <span class="n">tavg</span><span class="p">,</span>
+            <span class="s1">&#39;ppt&#39;</span><span class="p">:</span> <span class="n">ppt</span><span class="p">,</span>
+            <span class="s1">&#39;vs&#39;</span><span class="p">:</span> <span class="n">vs</span><span class="p">,</span>
+            <span class="s1">&#39;psfc&#39;</span><span class="p">:</span> <span class="n">psfc</span><span class="p">,</span>
+            <span class="s1">&#39;huss&#39;</span><span class="p">:</span> <span class="n">huss</span><span class="p">,</span>
+            <span class="s1">&#39;relhum&#39;</span><span class="p">:</span> <span class="n">relhum</span><span class="p">,</span>
+            <span class="s1">&#39;tdmean&#39;</span><span class="p">:</span> <span class="n">tdmean</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_load_parameter_file</span><span class="p">(</span><span class="n">parameterfilename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the parameters from a json file if exists.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        parameterfilename (str): Name of the file to load parameters from.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict or None: Dictionary of parameters if file exists, otherwise None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parameterfilename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parameter file undefined, using default parameters&quot;</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">create_dict_parameters</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parameterfilename</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading parameters from </span><span class="si">{</span><span class="n">parameterfilename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">parameterfilename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">parameters</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter file </span><span class="si">{</span><span class="n">parameterfilename</span><span class="si">}</span><span class="s2"> not found, using default parameters&quot;</span><span class="p">)</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="n">create_dict_parameters</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">parameters</span>
+
+
+<span class="k">def</span> <span class="nf">_save_outputs_npy</span><span class="p">(</span><span class="n">model_output</span><span class="p">,</span> <span class="n">outputs_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save model outputs to file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_output (class): class containing snow model outputs</span>
+<span class="sd">        outputs_path (str): name of directory to save outputs to.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        nothing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_locations</span> <span class="o">=</span> <span class="n">model_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">SnowWaterEq</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">variables_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">model_output</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables_to_save</span><span class="p">:</span>
+        <span class="n">var_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">model_output</span><span class="p">),</span><span class="n">n_locations</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model_output</span><span class="p">)):</span>
+            <span class="n">var_data</span><span class="p">[</span><span class="n">t</span><span class="p">,:]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model_output</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">outputs_path</span> <span class="o">+</span> <span class="n">v</span> <span class="o">+</span> <span class="s1">&#39;.npy&#39;</span><span class="p">,</span> <span class="n">var_data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_save_variables_as_ncdf</span><span class="p">(</span><span class="n">snow_model_list</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save the variables of SnowModelVariables as individual NetCDF files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        snow_model_list (list): A list of SnowModelVariables instances, each representing a time step.</span>
+<span class="sd">        lat (np.ndarray): Latitude values (1D array).</span>
+<span class="sd">        lon (np.ndarray): Longitude values (1D array).</span>
+<span class="sd">        time (np.ndarray): Time values (1D array, e.g., datetime objects or strings).</span>
+<span class="sd">        output_dir (str): Directory to save the NetCDF files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># guarantee to work on size 1 or size &gt; 1</span>
+    <span class="c1"># lat = np.atleast_1d(lat)</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the expected shape of combined_data</span>
+    <span class="n">expected_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">lat</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">lon</span><span class="p">))</span>
+
+    <span class="c1"># Get the first instance to determine variable names</span>
+    <span class="n">first_instance</span> <span class="o">=</span> <span class="n">snow_model_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">variable_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">first_instance</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">variable_name</span> <span class="ow">in</span> <span class="n">variable_names</span><span class="p">:</span>
+        <span class="c1"># Combine data for this variable across all time steps</span>
+        <span class="n">combined_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">variable_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">snow_model_list</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Reshape combined_data to match the expected shape</span>
+        <span class="n">combined_data</span> <span class="o">=</span> <span class="n">combined_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">expected_shape</span><span class="p">)</span>
+
+        <span class="c1"># Create an xarray DataArray</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+            <span class="n">combined_data</span><span class="p">,</span>
+            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">),</span>
+            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="n">lat</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="n">lon</span><span class="p">},</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">variable_name</span><span class="p">,</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">variable_name</span><span class="si">}</span><span class="s2"> from SnowModelVariables&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Define the output file path</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">variable_name</span><span class="si">}</span><span class="s2">.nc&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Save as NetCDF</span>
+        <span class="n">da</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved </span><span class="si">{</span><span class="n">variable_name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># if variable_name == &#39;SnowWaterEq&#39;:</span>
+            <span class="c1"># return da</span>
+            <span class="c1">#da.to_netcdf(file_path)</span>
+
+
+<div class="viewcode-block" id="run_model"><a class="viewcode-back" href="../api_reference.html#runsnowclim_model.run_model">[docs]</a><span class="k">def</span> <span class="nf">run_model</span><span class="p">(</span><span class="n">forcings_path</span><span class="p">,</span> <span class="n">parameters_path</span><span class="p">,</span> <span class="n">outputs_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_format</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Loading necessary files...&#39;</span><span class="p">)</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="n">_load_parameter_file</span><span class="p">(</span><span class="n">parameters_path</span><span class="p">)</span>
+    <span class="n">forcings_data</span> <span class="o">=</span> <span class="n">_load_forcing_data</span><span class="p">(</span><span class="n">forcings_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">forcings_path</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s2">&quot;.nc&quot;</span><span class="p">:</span>
+        <span class="n">forcings_data</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">][</span><span class="s1">&#39;time_sliced&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;cal&#39;</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Files loaded, running the model...&#39;</span><span class="p">)</span>
+    <span class="n">model_output</span> <span class="o">=</span> <span class="n">run_snowclim_model</span><span class="p">(</span><span class="n">forcings_data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">outputs_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outputs_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">save_format</span> <span class="o">==</span> <span class="s1">&#39;.nc&#39;</span><span class="p">:</span>
+                <span class="n">_save_variables_as_ncdf</span><span class="p">(</span><span class="n">model_output</span><span class="p">,</span>
+                                        <span class="n">forcings_data</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">][</span><span class="s1">&#39;lat&#39;</span><span class="p">],</span>
+                                        <span class="n">forcings_data</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">][</span><span class="s1">&#39;lon&#39;</span><span class="p">],</span>
+                                        <span class="n">forcings_data</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">][</span><span class="s1">&#39;time&#39;</span><span class="p">],</span>
+                                        <span class="n">outputs_path</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_save_outputs_npy</span><span class="p">(</span><span class="n">model_output</span><span class="p">,</span> <span class="n">outputs_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Output to save files does not exist!&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_output</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pySnowClim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output_variables.html">Output Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to pySnowClim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Abby Lute, Aranildo Lima, Rajesh Shrestha.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
