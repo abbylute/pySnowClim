@@ -1,7 +1,4 @@
 # pySnowClim
-Welcome to the `pySnowClim` repo.
-
-## What is it?
 
 `pySnowClim`  is a robust, efficient, and open-source Python implementation of
 the original SnowClim model written in MATLAB.
@@ -12,16 +9,24 @@ provide high-resolution snowpack estimates, especially useful in complex terrain
 Many current snow models are either too simple, too computationally costly,
 or not easy to use with modern workflows.
 
-Users that might be interested on this package include researchers,
-hydrologists, ecologists, students, and land
-managers who need gridded information about snow for water resource
-assessments, ecological studies, and climate impact analysis.
+The target audience of `pySnowClim` includes hydrologists, climatologists,
+ecologists, water resource managers,
+and students who need reliable snow modeling capabilities for applications such as:
+
+- Research: Detailed energy balance studies and process investigations
+- Operations: Water resource forecasting and management
+- Education: Teaching snow physics and energy balance concepts
+- Climate Studies: Long-term snow evolution under changing conditions
+- Adaptation Planning: anticipating and planning adaptations to impacts of warming on snow-dependent species, ecosystems, and communities
+
+More information about the package and the model can be found in the [documentation page](https://abbylute.github.io/pySnowClim/index.html) and [Lute et al., 2022](https://doi.org/10.5194/gmd-15-5045-2022).
 
 ## Installation
 
 ### Prerequisites
 - Python 3.8 or higher
 - Git (for cloning the repository)
+- See the [requirements.txt](requirements.txt) file to check the required packages.
 
 ### Option 1: Install from source (Recommended for development)
 
@@ -48,85 +53,163 @@ This installs the package in "editable" mode, so changes to the source code are 
 ```bash
 pip install -e .
 ```
+To verify that `pySnowClim` is installed correctly:
+```bash
+python verify_instalation.py
+```
 
 ### Option 2: Install for regular use
 ```bash
 pip install git+https://github.com/abbylute/pySnowClim.git
 ```
-
-### Verify Installation
-To verify that pySnowClim is installed correctly:
+To verify that `pySnowClim` is installed correctly:
 ```bash
-python verify_instalation.py
+python -c "from createParameterFile import create_dict_parameters;print(create_dict_parameters())"
 ```
-
-### Dependencies
-See the requirements.txt file to check the required packages:
-
 
 ## Running the Model
-1. Prepare Input Data
-To run the model, you need the following files:
 
-* **Meteorological forcing data**: Store these files in a directory, such as `data/`.
-These files provide necessary input data for the model (e.g., temperature, precipitation).
-* **Parameter file**: This file defines model parameters required to run the simulation
-(e.g., parameters.mat). Place this file in the appropriate directory (e.g., `data/`).
-If there file is not present the code will use the default values based on
-[Lute et al. 2022](https://doi.org/10.5194/gmd-15-5045-2022).
+`pySnowClim` provides two main ways to run snow simulations:
 
-Ensure the files are organized as follows:
+1. Python API: Use the run_model function directly in Python scripts.
+2. Command Line: Run simulations from the terminal using run_main.py.
+
+Both approaches require meteorological forcing data and optionally accept custom parameter configurations.
+
+### Input Data Requirements
+`pySnowClim` requires time series of meteorological variables. The model accepts data in NetCDF format (Recommended) or legacy MATLAB `.mat` files.
+
+Required Variables:
+- **lrad** (kJ/m²/timestep):	Incoming longwave radiation
+- **solar** (kJ/m²/timestep):	Incoming solar radiation
+- **tavg** (°C):	Mean air temperature
+- **ppt** (m/timestep):	Total precipitation
+- **vs** (m/s):	Wind speed at reference height
+- **psfc** (hPa):	Surface atmospheric pressure
+- **huss** (kg/kg):	Specific humidity
+- **relhum** (%):	Relative humidity
+- **tdmean** (°C):	Dewpoint temperature
+
+The forcing data should be organized as a NetCDF file with dimensions:
+- **time**: Temporal dimension
+- **lat**: Latitude dimension
+- **lon**: Longitude dimension
+
+
+### Python API Usage
+
+The primary interface for programmatic use:
+
+```python
+from src.runsnowclim_model import run_model
+
+# Basic simulation
+results = run_model(
+    forcings_path='forcing_data.nc',      # Input forcing data
+    parameters_path='parameters.json',     # Custom parameters (optional)
+    outputs_path='simulation_results/',    # Output directory
+    save_format='.nc'                     # Save as NetCDF
+)
+
+# Results is a list of SnowModelVariables objects, one per timestep
+print(f"Simulation completed: {len(results)} timesteps")
 ```
-data/
-├── parameters.mat         # Model parameters
-├── lat_lon_elev.npy       # Latitude, longitude, elevation
-├── lrad.npy               # Longwave radiation
-├── solar.npy              # Solar radiation
-├── tavg.npy               # Average temperature
-├── ppt.npy                # Precipitation
-└── other forcing files... # Other necessary meteorological data
-```
 
-2. Running the Model
-To run the model, use the following command in the terminal:
+### Command Line Usage
 
-```
+For operational use and batch processing:
+
+```bash
+# Basic usage - uses all defaults
 python run_main.py
+
+# Specify input forcing file
+python run_main.py forcing_data.nc
+
+# Specify input and output directories
+python run_main.py forcing_data.nc results/
+
+# Full specification with custom parameters
+python run_main.py forcing_data.nc results/ custom_params.json .nc
+
+# Run with MATLAB-format inputs (legacy)
+python run_main.py data/ results/ parameters.json .npy
 ```
 
-This will execute the pySnowClim model, which loads the required forcing data and
-parameter file, then runs the snowpack simulation.
+#### Command Line Arguments:
+
+1. ``forcings_path`` (optional): Path to forcing data
+
+   - Default: ``'data/'``
+   - Can be NetCDF file or directory with .mat files
+
+2. ``output_path`` (optional): Output directory
+
+   - Default: ``'outputs/'``
+   - Directory will be created if it doesn't exist
+
+3. ``parameters_path`` (optional): JSON parameter file
+
+   - Default: ``None`` (uses model defaults)
+   - Must be valid JSON format
+
+4. ``save_format`` (optional): Output file format
+
+   - Default: ``None`` (saves as .npy files)
+   - Use ``'.nc'`` for NetCDF output
 
 For more information about how to run the model:
-```
+```python
 python run_main.py --help
 ```
 
-3. Main File Structure
-The `run_main.py` script serves as the entry point for running the model.
-Here's an overview of its structure:
+## Examples
 
-* The script imports the `run_model` function from the `src/runsnowclim_model.py` file.
-* It initializes the model by specifying the path to the forcing data directory (`data/`)
-and the parameter file (`data/parameters.mat`).
-* The model is then run using the run_model function.
+The [run_snowclim_example.py](examples/run_snowclim_example.py)` script provides a complete workflow that:
 
-4. Modifying the Model
-If you wish to modify the paths or input files, adjust the `forcings_path` and
-`parameters_path` in the main script.
+1. Loads meteorological forcing data and observations
+2. Runs the `pySnowClim` model with default parameters
+3. Compares model output with observed snow water equivalent
+4. Generates validation plots and performance statistics
 
-Example:
+**Command Line Execution:**
+```bash
+cd examples
+python run_snowclim_example.py
 ```
-python run_main.py path_to_forcing_data/  path_to_outputs/
-```
+## Troubleshooting
+### Installation Problems
 
-5. Output
-Once the model has run successfully, the results (such as snow melt, snow water
-equivalent, snow depth, and other variables) will be returned by the run_model function.
-These results can be further analyzed or saved to files, depending on your needs.
-By default the files will be saved inside `/outputs` directory.
+- Verify Python version (3.8+) and required packages
+- Check file paths and permissions
+- Ensure NetCDF libraries are properly installed
 
-6. Troubleshooting
-* Ensure that all the required input files are correctly placed in the `data/` directory.
-* Make sure the paths provided in the `run_model` function are correct.
-* If you encounter missing dependencies, install them using the `pip` or `conda`.
+### Input Data Issues
+
+- Validate forcing data units and ranges
+- Check for missing values or unrealistic extremes
+- Verify coordinate system consistency
+
+### Parameter Problems
+
+- Use ``create_dict_parameters()`` to ensure proper parameter structure
+- Check JSON syntax if using custom parameter files
+- Validate parameter value ranges
+
+### Memory Errors
+
+- Reduce spatial domain size
+- Increase available system memory
+- Use smaller timestep chunks for processing
+
+### Convergence Issues
+
+- Check energy balance components for unrealistic values
+- Enable stability corrections for turbulent flux calculations
+- Adjust energy smoothing parameters for sub daily simulations
+
+### Output Problems
+
+- Ensure output directory exists and is writable
+- Check available disk space
+- Verify save format specification

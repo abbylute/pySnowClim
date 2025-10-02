@@ -1,5 +1,4 @@
 """Main script to run pySnowClim."""
-import os
 import sys
 import argparse
 
