@@ -161,6 +161,20 @@ Comprehensive liquid water handling:
 - Refreezing when snowpack has cold content
 - Runoff generation with realistic drainage rates
 
+Snow Tower Management
+~~~~~~~~~~~~~~~~~~~~~~
+
+Optional radiation enhancement to reduce excessive snow accumulation:
+
+- Downward longwave radiation is enhanced by a multiplicative factor when snowpack exceeds a threshold during specified months to increase energy available for melt
+- Implementation is controlled by four adjustable parameters:
+  - max_swe_height: SWE threshold above which radiation enhancement should be implemented
+  - downward_longwave_radiation_factor_start_month: first month to consider applying radiation enhancement
+  - downward_longwave_radiation_factor_end_month: last month to consider applying radiation enhancement
+  - downward_longwave_radiation_factor: multiplicative factor applied to downward longwave radiation when SWE threshold is exceeded and month requirement is met
+- Mimics the change in energy balance that would result following downslope movement of excessive snowpack via gravitational or wind redistribution or glacier flow
+
+
 Model Validation and Applications
 ---------------------------------
 
