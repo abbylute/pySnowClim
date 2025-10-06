@@ -55,7 +55,7 @@ pip install -e .
 ```
 To verify that `pySnowClim` is installed correctly:
 ```bash
-python verify_instalation.py
+python verify_installation.py
 ```
 
 ### Option 2: Install for regular use
@@ -200,7 +200,6 @@ python run_snowclim_example.py
 
 - Reduce spatial domain size
 - Increase available system memory
-- Use smaller timestep chunks for processing
 
 ### Convergence Issues
 
