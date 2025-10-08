@@ -12,6 +12,9 @@ The model is implemented as a Python translation of the original SnowClim model 
 maintaining the same core physics while providing improved
 computational efficiency and modern data handling capabilities.
 
+.. image:: snowclim.png
+   :alt: Snow model conceptual diagram. Solid black arrows indicate mass fluxes, and dashed black arrows indicate energy fluxes.
+
 **Core Model Philosophy:**
 
 The model operates on the principle that snow evolution is fundamentally controlled by energy exchanges at the snow surface.
