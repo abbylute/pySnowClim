@@ -21,6 +21,8 @@ and students who need reliable snow modeling capabilities for applications such 
 
 More information about the package and the model can be found in the [documentation page](https://abbylute.github.io/pySnowClim/index.html) and [Lute et al., 2022](https://doi.org/10.5194/gmd-15-5045-2022).
 
+![Snow model conceptual diagram.](docs/snowclim.png)
+
 ## Installation
 
 ### Prerequisites
