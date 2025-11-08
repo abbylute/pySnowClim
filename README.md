@@ -62,7 +62,7 @@ python verify_installation.py
 
 ### Option 2: Install for regular use
 ```bash
-pip install git+https://github.com/abbylute/pySnowClim.git
+pip install pysnowclim
 ```
 To verify that `pySnowClim` is installed correctly:
 ```bash
@@ -167,7 +167,7 @@ python run_main.py --help
 
 ## Examples
 
-The [run_snowclim_example.py](examples/run_snowclim_example.py)` script provides a complete workflow that:
+The [run_snowclim_example.py](examples/run_snowclim_example.py)` script (and also the [example.ipynb](examples/example.ipynb) notebook) provides a complete workflow that:
 
 1. Loads meteorological forcing data and observations
 2. Runs the `pySnowClim` model with default parameters

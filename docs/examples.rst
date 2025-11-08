@@ -9,7 +9,7 @@ Running the Example Script
 Overview
 ~~~~~~~~
 
-The `examples/run_snowclim_example.py` script provides a complete workflow that:
+The `examples/run_snowclim_example.py` script (also the examples/example.ipynb notebook) provides a complete workflow that:
 
 1. Loads meteorological forcing data and observations
 2. Runs the pySnowClim model with default parameters
