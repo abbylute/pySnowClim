@@ -21,7 +21,7 @@ affiliations:
    index: 1
  - name: Woodwell Climate Research Center, Falmouth, MA 02540, USA
    index: 2
-date: 08 October 2025
+date: 19 January 2026
 bibliography: paper.bib
 ---
 
@@ -45,8 +45,7 @@ Snow is a critical component of the global water cycle.
 The accurate simulation of snowpack dynamics is not only essential for
 water resource management,
 but also for flood forecasting, ecological studies, and climate change impact assessments
-[@Caretta2022Water].
-
+[@Caretta2022Water]. 
 Many current snow models are either computationally efficient but only represent
 physical processes to a very limited extent (e.g. temperature index models),
 or represent many important physical processes but are too computational
@@ -56,14 +55,6 @@ with modern scientific workflows
 [@Ikeda2021; @Walter2005; @Liston2006SnowModel; @Garen2005EnergyBalanceSnowmelt; @Wrzesien2018MountainSnow].
 `pySnowClim` addresses some of these problems by offering a flexible,
 efficient, and open alternative with a good balance between representing physical processes and usability.
-While the original SnowClim model was written in MATLAB [@lute2022],
-a Python package makes the model more accessible to a wider scientific and practical audience.
-Python is widely adopted in earth science and data science communities,
-and a well-supported package enables easier integration, reproducibility,
-and further development.
-An example is the current implementation of coupling between
-`pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020]
-[(https://github.com/iiasa/CWatM)](https://github.com/iiasa/CWatM).
 
 The target audience of `pySnowClim` includes hydrologists, climatologists,
 ecologists, water resource managers,
@@ -82,8 +73,37 @@ In addition, the model can be used on different:
 - **Environments**: Diverse snow climates from maritime to continental
 
 
-# The model
+# Software design
 
+The model architecture of `pySnowClim` package follows object-oriented design principles with clear
+separation between forcing data handling, parameter management,
+core physics calculations, and output generation.
+`pySnowClim` leverages NumPy's vectorized operations for processing multiple grid points simultaneously, enhancing computational efficiency.
+It also uses xarray and pandas for more efficient data manipulation and NetCDF I/O operations.
+The package includes a comprehensive testing framework, featuring unit tests for individual physics functions and integration tests for complete workflows.
+`pySnowClim` also provides extensive documentation
+[(https://abbylute.github.io/pySnowClim)](https://abbylute.github.io/pySnowClim),
+including API references, example datasets, and validation against observations from a snow monitoring site.
+Model outputs include standard snow variables (SWE, depth, density, melt, albedo, temperature)
+as well as detailed energy budget components.
+
+
+# Research impact statement
+
+There are several key improvements of `pySnowClim` compared to the original MATLAB-based SnowClim model [@lute2022].
+A Python package makes the model more accessible to a wider scientific and practical audience.
+Python is widely adopted in earth science and data science communities,
+and a well-supported package enables easier integration, reproducibility,
+and further development.
+An example is the current implementation of coupling between
+`pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020]
+[(https://github.com/iiasa/CWatM)](https://github.com/iiasa/CWatM).
+In addition, a new functionality was added to reduce excessive snow accumulation
+(i.e. snow towers) using an optional radiation enhancement makgin the model more realistic.
+
+
+
+# The model
 `pySnowClim` employs the fundamental principles of mass and energy conservation as its core framework.
 The model requires meteorological forcing data including temperature,
 precipitation, shortwave radiation, longwave radiation, wind speed, humidity,
@@ -139,29 +159,12 @@ melting conditions, and seasonal variations with options for different complexit
 [@HammanVIC2018; @LiangVIC1994; @ESSERY2013; @Tarboton1996UEB].
 
 
-## Advantages and Limitations
+# AI usage disclosure
 
-There are several key improvements of `pySnowClim` compared to the original MATLAB-based SnowClim model.
-The model architecture follows object-oriented design principles with clear
-separation between forcing data handling, parameter management,
-core physics calculations, and output generation.
-`pySnowClim` leverages NumPy's vectorized operations for processing multiple grid points simultaneously, enhancing computational efficiency.
-It also uses xarray and pandas for more efficient data manipulation and NetCDF I/O operations.
-The package includes a comprehensive testing framework, featuring unit tests for individual physics functions and integration tests for complete workflows.
-`pySnowClim` also provides extensive documentation
-[(https://abbylute.github.io/pySnowClim)](https://abbylute.github.io/pySnowClim),
-including API references, example datasets, and validation against observations from a snow monitoring site.
-Model outputs include standard snow variables (SWE, depth, density, melt, albedo, temperature)
-as well as detailed energy budget components.
-Finally, a new functionality was added to reduce excessive snow accumulation
-(i.e. snow towers) using
-an optional radiation enhancement.
-
-In addition, it is important to acknowledge some of the known model physical limitations
-such as a single-layer snowpack with separate surface and pack temperatures
-(but no internal temperature gradients) and the assumption of constant ground heat flux.
-Processes not simulated by the model include explicit snow grain evolution,
-vegetation interactions, and snow redistribution via gravity or wind.
+During the preparation of this work the authors used OpenAI’s ChatGPT, and Antrhopic's Claude in order to receive recommended code feedback and edits.
+In addition the documentation of the package was originally generated by Claude.
+After using these tools, the authors reviewed and edited the content as needed and take full responsibility for the content of this publication. 
+No generative AI tools were used in the development of the writing of this manuscript.
 
 # Acknowledgements
 
