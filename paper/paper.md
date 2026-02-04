@@ -21,7 +21,7 @@ affiliations:
    index: 1
  - name: Woodwell Climate Research Center, Falmouth, MA 02540, USA
    index: 2
-date: 20 January 2026
+date: 04 February 2026
 bibliography: paper.bib
 ---
 
@@ -46,15 +46,6 @@ The accurate simulation of snowpack dynamics is not only essential for
 water resource management,
 but also for flood forecasting, ecological studies, and climate change impact assessments
 [@Caretta2022Water]. 
-Many current snow models are either computationally efficient but only represent
-physical processes to a very limited extent (e.g. temperature index models),
-or represent many important physical processes but are too computational
-burdensome for large-scale high-resolution applications (e.g. most process-based models).
-In addition, many are propriety, not easily accessible, or difficult to integrate
-with modern scientific workflows
-[@Ikeda2021; @Walter2005; @Liston2006SnowModel; @Garen2005EnergyBalanceSnowmelt; @Wrzesien2018MountainSnow].
-`pySnowClim` addresses some of these problems by offering a flexible,
-efficient, and open alternative with a good balance between representing physical processes and usability.
 
 The target audience of `pySnowClim` includes hydrologists, climatologists,
 ecologists, water resource managers,
@@ -72,6 +63,17 @@ In addition, the model can be used on different:
 - **Temporal Scales**: Sub-daily to daily timesteps, multi-decadal simulations
 - **Environments**: Diverse snow climates from maritime to continental
 
+# State of the field
+
+Many current snow models are either computationally efficient but only represent
+physical processes to a very limited extent (e.g. temperature index models),
+or represent many important physical processes but are too computational
+burdensome for large-scale high-resolution applications (e.g. most process-based models).
+In addition, many are propriety, not easily accessible, or difficult to integrate
+with modern scientific workflows
+[@Ikeda2021; @Walter2005; @Liston2006SnowModel; @Garen2005EnergyBalanceSnowmelt; @Wrzesien2018MountainSnow].
+`pySnowClim` addresses some of these problems by offering a flexible,
+efficient, and open alternative with a good balance between representing physical processes and usability.
 
 # Software design
 
