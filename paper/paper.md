@@ -17,7 +17,7 @@ authors:
     orcid: 0000-0001-7781-6495
     affiliation: 1
 affiliations:
- - name: Climate Research Division, Environment and Climate Change Canada, Victoria, BC, Canada
+ - name: Climate Modelling Division, Environment and Climate Change Canada, Victoria, BC, Canada
    index: 1
  - name: Woodwell Climate Research Center, Falmouth, MA 02540, USA
    index: 2
@@ -34,18 +34,18 @@ energy balance calculations, snow density evolution, albedo dynamics,
 and phase change processes, while simplifying other components to maintain
 computationally efficiency, delivering consistent snowpack
 simulations across diverse climatic conditions.
-These characteristics make pySnowClim ideal for large-scale regional to continental
-studies, studies requiring $< 1km$ spatial resolution such as those in complex terrain,
-and studies evaluating the impact of alternate climate scenarios on snowpack.
-
+Building on these strengths of SnowClim, pySnowClim adopts a layered architecture with 
+vectorized multi-point computation using standardized NetCDF I/O. 
+This makes pySnowClim suitable for point to large scale applications, 
+and ready to couple with climate and hydrological models.
 
 # Statement of need
 
 Snow is a critical component of the global water cycle.
 The accurate simulation of snowpack dynamics is not only essential for
 water resource management,
-but also for flood forecasting, ecological studies, and climate change impact assessments
-[@Caretta2022Water]. 
+but also for flood prediction, ecological studies, and climate change impact assessments
+[@Anderson2023plant; @Anderson2025geneflow; @Dixon2026rainonsnow; @Williams2026forestfire]. 
 
 The target audience of `pySnowClim` includes hydrologists, climatologists,
 ecologists, water resource managers,
@@ -67,40 +67,43 @@ In addition, the model can be used on different:
 
 Many current snow models are either computationally efficient but only represent
 physical processes to a very limited extent (e.g. temperature index models),
-or represent many important physical processes but are too computational
-burdensome for large-scale high-resolution applications (e.g. most process-based models).
-In addition, many are propriety, not easily accessible, or difficult to integrate
-with modern scientific workflows
-[@Ikeda2021; @Walter2005; @Liston2006SnowModel; @Garen2005EnergyBalanceSnowmelt; @Wrzesien2018MountainSnow].
-`pySnowClim` addresses some of these problems by offering a flexible,
-efficient, and open alternative with a good balance between representing physical processes and usability.
+or provide a detailed physical process representation but are too computational
+burdensome for large-scale high-resolution applications (e.g. most process-based models) [@Ikeda2021; @Walter2005; @Liston2006SnowModel; @Garen2005EnergyBalanceSnowmelt; @Wrzesien2018MountainSnow].
+
+SnowClim [@lute2022] was developed to offer a flexible,
+efficient, and open source alternative with a good balance between representing physical processes and usability. 
+However, the original MATLAB-based model has no separation of I/O and physics, relies on .mat files, and MATLAB usage is tied to licensing issues, 
+which restricts wider applicability.
+Thus, `pySnowClim` being based on Python programming environment, 
+makes the model more accessible to a wider scientific and practical audience when compared to the original MATLAB-based model.
 
 # Software design
 
-The model architecture of `pySnowClim` package follows object-oriented design principles with clear
-separation between forcing data handling, parameter management,
-core physics calculations, and output generation.
-`pySnowClim` leverages NumPy's vectorized operations for processing multiple grid points simultaneously, enhancing computational efficiency.
-It also uses xarray and pandas for more efficient data manipulation and NetCDF I/O operations.
-The package includes a comprehensive testing framework, featuring unit tests for individual physics functions and integration tests for complete workflows.
-`pySnowClim` also provides extensive documentation
-[(https://abbylute.github.io/pySnowClim)](https://abbylute.github.io/pySnowClim),
-including API references, example datasets, and validation against observations from a snow monitoring site.
-Model outputs include standard snow variables (SWE, depth, density, melt, albedo, temperature)
-as well as detailed energy budget components.
+In the original MATLAB SnowClim workflow, execution was driven by a wrapper script that prepared data (.mat files) and called the main routine. Parameters were loaded from a file, and the timestep loop computed physics while managing state and outputs. Thus, effectively orchestration and configuration were coupled with the core calculations.
+In addition, the state of the snowpack used a  procedural approach which is more prone to state-update bugs.
+Additonally, while style works well for a MATLAB-only workflow, it makes it harder to embed SnowClim as a “callable component” inside another model’s time loop without the separation of I/O/configuration from computation. 
 
+pySnowClim adopts a layered architecture: a core physics engine (timestep calculations) is separated from a runner (I/O + orchestration) and a CLI for batch/operational use.
+The new implementation also prioritizes vectorized multi-point computation and standardized NetCDF/NumPy I/O, with explicit JSON-based configuration.
+Research workflows often need the same physics to run in different contexts: notebooks, batch jobs, or pipelines with standardized I/O. Separating the engine from I/O makes easier to validate physics independently of data inputs format.  
+pySnowClim uses an encapsulated state with more abstraction than the procedural approach used in MATLAB, where the 
+model state and outputs are explicit data structures (e.g., Snowpack state and preallocated SnowModelVariables). 
+
+Overall, these changes support maintainability, reduce risk of subtle state-update bugs, and make easier the addition of new diagnostics, and variables.
+The changes allow pySnowClim to be more easily coupled to hydrology/land-surface/ecosystem models as a drop-in component (shared arrays/NetCDF, pipeline execution) without changing core physics. 
 
 # Research impact statement
 
-There are several key improvements of `pySnowClim` compared to the original MATLAB-based SnowClim model [@lute2022].
-A Python package makes the model more accessible to a wider scientific and practical audience.
-Python is widely adopted in earth science and data science communities,
-and a well-supported package enables easier integration, reproducibility,
-and further development.
-An example is the current implementation of coupling between
+When a model is already published/validated
+[@Jans2025Sentinel; @Anderson2025geneflow; @Dixon2026rainonsnow; @Williams2026forestfire; @Boeykens2025MLsentinel], 
+researchers need confidence that the new implementation is behaviorally comparable. Also, a well-supported Python package enables easier integration, reproducibility,
+and further development. 
+`pySnowClim` provides an extensive documentation
+including API references, example datasets, and validation against observations from a snow monitoring site. It also includes a comprehensive testing framework, featuring unit tests for individual physics functions and integration tests for complete workflows. 
+In addition, there is a current implementation of coupling between
 `pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020]
 [(https://github.com/iiasa/CWatM)](https://github.com/iiasa/CWatM).
-In addition, to make the model more realistic, a new functionality was added to reduce excessive snow accumulation (i.e. snow towers) using an optional radiation enhancement.
+
 
 
 # The model
@@ -157,6 +160,7 @@ snow density evolution through compaction processes, liquid water retention and 
 including aging effects,
 melting conditions, and seasonal variations with options for different complexity levels
 [@HammanVIC2018; @LiangVIC1994; @ESSERY2013; @Tarboton1996UEB].
+In addition, similarly to other models [@BurekCWatM2020; @anderson2006snow], a new functionality was added to reduce excessive snow accumulation (i.e. snow towers) using an optional radiation enhancement.
 
 
 # AI usage disclosure
