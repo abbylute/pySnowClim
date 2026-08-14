@@ -21,7 +21,7 @@ affiliations:
    index: 1
  - name: Woodwell Climate Research Center, Falmouth, MA 02540, USA
    index: 2
-date: 04 February 2026
+date: 07 August 2026
 bibliography: paper.bib
 ---
 
@@ -65,17 +65,12 @@ In addition, the model can be used on different:
 
 # State of the field
 
-Many current snow models are either computationally efficient but only represent
-physical processes to a very limited extent (e.g. temperature index models),
-or provide a detailed physical process representation but are too computational
-burdensome for large-scale high-resolution applications (e.g. most process-based models) [@Ikeda2021; @Walter2005; @Liston2006SnowModel; @Garen2005EnergyBalanceSnowmelt; @Wrzesien2018MountainSnow].
+Many current snow models are either computationally efficient but only represent physical processes to a very limited extent (e.g. temperature index models), or provide detailed physical process representation but are too computationally burdensome for large-scale high-resolution applications (e.g. most process-based models). The former category includes temperature index models such as SNOW-17 [@Anderson1973] which is used by the US National Weather Service for river flow and flood forecasting, and the snow components of the SRM [Martinec2008], HBV [@Bergstrom1992], and SWAT [@Arnold1998] models which are used for water management, flood forecasting, and climate change studies. These models often only require temperature and precipitation for the snow routines and can be applied over regional to continental domains and multidecadal time periods, but may not be robust under changing climatic conditions. This is because the temperature index method implicitly assumes that air temperature as a proxy for the energy available to melt snow and the use of static degree-day factor cannot represent the shift in energy fluxes associated with earlier snowmelt in a warmer climate [@Ismail2023] and energy fluxes that cause rain-on-snow events that could lead to extreme flooding [@Wurzer2016].
 
-SnowClim [@lute2022] was developed to offer a flexible,
-efficient, and open source alternative with a good balance between representing physical processes and usability. 
-However, the original MATLAB-based model has no separation of I/O and physics, relies on .mat files, and MATLAB usage is tied to licensing issues, 
-which restricts wider applicability.
-Thus, `pySnowClim` being based on Python programming environment, 
-makes the model more accessible to a wider scientific and practical audience when compared to the original MATLAB-based model.
+The latter category, physically-based or process-based models, includes SNTHERM [@Jordan1991], SNOWPACK [@Lehning1999], iSnobal [@Marks1999], SnowModel [@Liston2006SnowModel], and FSM [@Essery2015], among others. Common applications of these models include avalanche forecasting, detailed snow physics studies, and mountain hydrology (as distinguished from the broader scale river basin hydrology applications of temperature index models) in plot scale to catchment sized domains. When process-based snow models are applied to continental or global domains, sometimes as part of land surface or climate models, high performance computing infrastructure is typically needed (e.g. [@Ikeda2021; @Wrzesien2018MountainSnow; @Garen2005EnergyBalanceSnowmelt; @Walter2005]). While process-based models require more forcing variables than temperature index models, they also provide more detailed snow simulations which may include snow stratigraphy, sublimation losses, surface albedo, etc. Since they are based on equations that directly represent snowpack physics, they are expected to be more robust under changing climatic conditions.
+
+The SnowClim model [@lute2022] was developed to fill the gap outlined above. Namely, it provides high simulation accuracy, incorporates all major energy balance calculations, and is computationally efficient enough to be run at sub-kilometer scale over regional to continental domains. However, the original MATLAB-based model has no separation of I/O and, relies on .mat files, and MATLAB usage is tied to licensing issues, which restricts wider applicability. The Python translation of SnowClim, pySnowClim, makes the model more robust and accessible to a wider scientific and practical audience when compared to the original MATLAB-based model
+
 
 # Software design
 
@@ -92,18 +87,19 @@ model state and outputs are explicit data structures (e.g., Snowpack state and p
 Overall, these changes support maintainability, reduce risk of subtle state-update bugs, and make easier the addition of new diagnostics, and variables.
 The changes allow pySnowClim to be more easily coupled to hydrology/land-surface/ecosystem models as a drop-in component (shared arrays/NetCDF, pipeline execution) without changing core physics. 
 
+
 # Research impact statement
 
 When a model is already published/validated
 [@Jans2025Sentinel; @Anderson2025geneflow; @Dixon2026rainonsnow; @Williams2026forestfire; @Boeykens2025MLsentinel], 
 researchers need confidence that the new implementation is behaviorally comparable. Also, a well-supported Python package enables easier integration, reproducibility,
 and further development. 
-`pySnowClim` provides an extensive documentation
+`pySnowClim` provides an [extensive documentation](https://abbylute.github.io/pySnowClim/index.html)
 including API references, example datasets, and validation against observations from a snow monitoring site. It also includes a comprehensive testing framework, featuring unit tests for individual physics functions and integration tests for complete workflows. 
-In addition, there is a current implementation of coupling between
-`pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020]
-[(https://github.com/iiasa/CWatM)](https://github.com/iiasa/CWatM).
 
+In addition, the model is now usable as importable, tested, open-source Python software that can be coupled into land-surface and hydrological modelling frameworks. For instance, there is a current implementation of coupling between
+`pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020]
+[(https://github.com/iiasa/CWatM/tree/develop)](https://github.com/iiasa/CWatM/tree/develop). The CWatM documentation includes a dedicated [`pySnowClim` section](https://cwatm.iiasa.ac.at/4_UsingCwatM.html#pysnowclim), and notes that users can choose between pySnowClim and the existing degree-day snow approach. 
 
 
 # The model
