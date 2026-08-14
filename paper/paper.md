@@ -63,6 +63,7 @@ In addition, the model can be used on different:
 - **Temporal Scales**: Sub-daily to daily timesteps, multi-decadal simulations
 - **Environments**: Diverse snow climates from maritime to continental
 
+
 # State of the field
 
 Many current snow models are either computationally efficient but only represent physical processes to a very limited extent (e.g. temperature index models), or provide detailed physical process representation but are too computationally burdensome for large-scale high-resolution applications (e.g. most process-based models). The former category includes temperature index models such as SNOW-17 [@Anderson1973] which is used by the US National Weather Service for river flow and flood forecasting, and the snow components of the SRM [Martinec2008], HBV [@Bergstrom1992], and SWAT [@Arnold1998] models which are used for water management, flood forecasting, and climate change studies. These models often only require temperature and precipitation for the snow routines and can be applied over regional to continental domains and multidecadal time periods, but may not be robust under changing climatic conditions. This is because the temperature index method implicitly assumes that air temperature as a proxy for the energy available to melt snow and the use of static degree-day factor cannot represent the shift in energy fluxes associated with earlier snowmelt in a warmer climate [@Ismail2023] and energy fluxes that cause rain-on-snow events that could lead to extreme flooding [@Wurzer2016].
