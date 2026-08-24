@@ -36,6 +36,7 @@ def _prepare_outputs(model_vars, precip):
     model_vars.SnowMelt *= const.WATERDENS
     model_vars.Sublimation *= const.WATERDENS
     model_vars.Condensation *= const.WATERDENS
+    model_vars.Evaporation *= const.WATERDENS
     model_vars.SnowDepth *= 1000  # Convert to mm
     model_vars.Runoff *= const.WATERDENS
     model_vars.RaininSnow *= const.WATERDENS
@@ -309,10 +310,12 @@ def _process_snowpack(input_forcings, parameters, snow_vars, precip, snowpack, c
     # --- Sublimation ---
     a = snowpack.lastsnowdepth > 0
     if np.any(a):
-        sublimation, condensation = calc_sublimation(energy_var['E'], snowpack, snow_vars,
+        sublimation, condensation, evaporation, deposition = calc_sublimation(energy_var['E'], snowpack, snow_vars,
                                                      parameters['snow_dens_default'])
         snow_vars.Sublimation = sublimation.copy()
         snow_vars.Condensation = condensation.copy()
+        snow_vars.Evaporation = evaporation.copy()
+        snow_vars.Deposition = deposition.copy()
 
     snowpack.update_class_no_snow(parameters)
     snowpack.adjust_temp_snow()
