@@ -50,11 +50,16 @@ def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
         CH = const.K**2 * np.power(np.log(parameters['windHt'] / parameters['z_0']), -1) \
             * np.power(np.log(parameters['tempHt'] / parameters['z_h']), -1)
 
-        if parameters['stability']:
-            # Calculate the bulk Richardson number
-            Rib = (g * parameters['windHt'] * (tavg - lastsnowtemp)) / \
-                ((tavg + const.K_2_C) * wind_speed**2)
+        # Calculate the bulk Richardson number. This is needed both for the
+        # optional stability adjustment to CH below, and for the E0_stable==2
+        # windless-exchange gating further down -- it must be computed
+        # regardless of the 'stability' switch so that E0_stable==2 works even
+        # when stability adjustment itself is turned off (see pySnowClim
+        # issue #84).
+        Rib = (g * parameters['windHt'] * (tavg - lastsnowtemp)) / \
+            ((tavg + const.K_2_C) * wind_speed**2)
 
+        if parameters['stability']:
             # Calculate FH as a function of Rib
             FH = np.full_like(tavg, np.nan)
             # For unstable case
@@ -86,7 +91,7 @@ def calc_turbulent_fluxes(parameters, wind_speed, lastsnowtemp, tavg,
         # Latent heat flux (E)
         if parameters['E0_app'] == 1:
             E = -(pa * CH * wind_speed) * (rhos - rhoa)  # Mass flux kg/m2/s
-        elif ['E0_app'] == 2:
+        elif parameters['E0_app'] == 2:
             E = -(pa * CH * wind_speed + Ex) * (rhos - rhoa)  # Mass flux kg/m2/s
 
         # Evaporation and sublimation energy flux (EV)
