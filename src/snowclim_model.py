@@ -299,6 +299,18 @@ def _process_snowpack(input_forcings, parameters, snow_vars, precip, snowpack, c
             setattr(snow_vars, key, value)
 
     snow_vars.Energy = lastenergy.copy()
+    # Cells that had no snow at the start of this timestep should not
+    # accumulate an energy-balance history: without this, when several
+    # independent grid cells/sites are batched into one domain array,
+    # a snow-free cell's energy still gets computed (energy fluxes are
+    # calculated for the whole domain, not gated per cell) and that
+    # spurious value is later averaged into the cold-content-tax energy
+    # smoothing once the cell does accumulate snow. That makes results
+    # for a given site depend on which other sites are batched with it.
+    # Setting Energy to NaN (matching each field's own no-computation default,
+    # and letting downstream np.nanmean-based smoothing ignore it) reproduces
+    # the behavior of running each site as its own single-cell domain.
+    snow_vars.Energy[~snow_vars.ExistSnow] = np.nan
 
     taxed_last_energy = _apply_cold_content_tax(
         snowpack.lastpackcc, parameters, previous_energy, lastenergy)
