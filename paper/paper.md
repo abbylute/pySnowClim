@@ -21,7 +21,7 @@ affiliations:
    index: 1
  - name: Woodwell Climate Research Center, Falmouth, MA 02540, USA
    index: 2
-date: 07 August 2026
+date: 17 September 2026
 bibliography: paper.bib
 ---
 
@@ -99,8 +99,8 @@ and further development.
 including API references, example datasets, and validation against observations from a snow monitoring site. It also includes a comprehensive testing framework, featuring unit tests for individual physics functions and integration tests for complete workflows. 
 
 In addition, the model is now usable as importable, tested, open-source Python software that can be coupled into land-surface and hydrological modelling frameworks. For instance, there is a current implementation of coupling between
-`pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020]
-[(https://github.com/iiasa/CWatM/tree/develop)](https://github.com/iiasa/CWatM/tree/develop). The CWatM documentation includes a dedicated [`pySnowClim` section](https://cwatm.iiasa.ac.at/4_UsingCwatM.html#pysnowclim), and notes that users can choose between pySnowClim and the existing degree-day snow approach. 
+`pySnowClim` and the Community Water Model (CWatM) [@BurekCWatM2020], where `pySnowClim` is now integrated into the main CWatM codebase
+[(https://github.com/iiasa/CWatM)](https://github.com/iiasa/CWatM). The CWatM documentation includes a dedicated [`pySnowClim` section](https://cwatm.iiasa.ac.at/4_UsingCwatM.html#pysnowclim), and notes that users can choose between pySnowClim and the existing degree-day snow approach. 
 
 
 # The model
